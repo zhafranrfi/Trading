@@ -1024,10 +1024,180 @@
         .modal-close:hover {
             background: rgba(239, 68, 68, 0.8);
         }
+
+        /* Auth Modal */
+        .auth-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-base);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            transition: opacity 0.3s;
+        }
+        .auth-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-radius);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            text-align: center;
+        }
+        .auth-title {
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+        .auth-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+        .auth-form-group {
+            text-align: left;
+            margin-bottom: 1.25rem;
+        }
+        .auth-form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .auth-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            color: #ffffff;
+            font-size: 1rem;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+        .auth-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--border-glow);
+        }
+        .auth-btn {
+            width: 100%;
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 1rem;
+        }
+        .auth-btn:hover {
+            background: #2563eb;
+            box-shadow: 0 4px 12px var(--color-primary-glow);
+        }
+        .auth-switch {
+            margin-top: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .auth-switch a {
+            color: var(--color-primary);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+        .auth-error {
+            color: var(--color-danger);
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            display: none;
+            text-align: left;
+        }
+        .user-profile-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            z-index: 50;
+        }
+        .logout-btn {
+            background: transparent;
+            border: none;
+            color: var(--color-danger);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .logout-btn:hover {
+            text-decoration: underline;
+        }
     </style>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 </head>
 
 <body>
+
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="auth-overlay">
+        <div class="auth-card">
+            <i data-lucide="shield-check" style="color: var(--color-primary); width: 48px; height: 48px; margin-bottom: 1rem;"></i>
+            <h2 class="auth-title" id="auth-title">Masuk</h2>
+            <p class="auth-desc" id="auth-desc">Silakan masuk untuk menyimpan jurnal Anda secara online.</p>
+            
+            <div id="auth-error-msg" class="auth-error">Error message here</div>
+            
+            <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+                <div class="auth-form-group">
+                    <label>Email</label>
+                    <input type="email" id="auth-email" class="auth-input" required placeholder="email@contoh.com">
+                </div>
+                <div class="auth-form-group">
+                    <label>Password</label>
+                    <input type="password" id="auth-password" class="auth-input" required placeholder="Minimal 6 karakter">
+                </div>
+                <button type="submit" class="auth-btn" id="auth-submit-btn">Masuk</button>
+            </form>
+            
+            <div class="auth-switch">
+                <span id="auth-switch-text">Belum punya akun?</span>
+                <a id="auth-switch-link" onclick="toggleAuthMode()">Daftar sekarang</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-content" style="display: none;">
+        <div class="user-profile-badge">
+            <i data-lucide="user" style="width: 14px; height: 14px;"></i>
+            <span id="user-email-display">user@email.com</span>
+            <span style="color: var(--border-color)">|</span>
+            <button class="logout-btn" onclick="logoutUser()">Logout</button>
+        </div>
 
     <div class="container">
         <header>
@@ -1413,7 +1583,8 @@
                             <th>R:R</th>
                             <th>Risk / Reward</th>
                             <th>Reason</th>
-                            <th>Prove</th>
+                            <th>Prove Reason</th>
+                            <th>Prove Hasil</th>
                             <th>Status</th>
                             <th>Aksi</th>
                         </tr>
@@ -1430,8 +1601,107 @@
         </div> <!-- End of Journal Tab -->
 
     </div>
+    </div> <!-- End of app-content -->
 
     <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyAvuXoU-1KETQ3aNWTA8AJkubMNeReLryM",
+          authDomain: "calctradejournal.firebaseapp.com",
+          projectId: "calctradejournal",
+          storageBucket: "calctradejournal.firebasestorage.app",
+          messagingSenderId: "848470387128",
+          appId: "1:848470387128:web:51f66dc6de7b5d2cee474d",
+          measurementId: "G-2WSL2YJDH8"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+        
+        let currentUser = null;
+        let authMode = 'login'; // 'login' or 'register'
+        
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('app-content').style.display = 'block';
+                document.getElementById('user-email-display').textContent = user.email;
+                
+                // Re-init icons for dynamic elements
+                lucide.createIcons();
+                
+                // Load data from Firebase
+                loadCalculatorState();
+                loadJournal();
+            } else {
+                currentUser = null;
+                document.getElementById('auth-screen').style.display = 'flex';
+                document.getElementById('app-content').style.display = 'none';
+                
+                // Clear state when logged out
+                journalData = [];
+                renderJournal();
+            }
+        });
+        
+        function toggleAuthMode() {
+            authMode = authMode === 'login' ? 'register' : 'login';
+            document.getElementById('auth-title').textContent = authMode === 'login' ? 'Masuk' : 'Daftar';
+            document.getElementById('auth-desc').textContent = authMode === 'login' ? 'Silakan masuk untuk menyimpan jurnal Anda secara online.' : 'Buat akun baru untuk mulai menyimpan jurnal.';
+            document.getElementById('auth-submit-btn').textContent = authMode === 'login' ? 'Masuk' : 'Daftar';
+            document.getElementById('auth-switch-text').textContent = authMode === 'login' ? 'Belum punya akun?' : 'Sudah punya akun?';
+            document.getElementById('auth-switch-link').textContent = authMode === 'login' ? 'Daftar sekarang' : 'Masuk di sini';
+            document.getElementById('auth-error-msg').style.display = 'none';
+        }
+        
+        async function handleAuthSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const errorMsg = document.getElementById('auth-error-msg');
+            const submitBtn = document.getElementById('auth-submit-btn');
+            
+            errorMsg.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Memproses...';
+            
+            try {
+                if (authMode === 'login') {
+                    await auth.signInWithEmailAndPassword(email, password);
+                } else {
+                    await auth.createUserWithEmailAndPassword(email, password);
+                }
+                document.getElementById('auth-email').value = '';
+                document.getElementById('auth-password').value = '';
+            } catch (error) {
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = getIndonesianAuthError(error.code);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = authMode === 'login' ? 'Masuk' : 'Daftar';
+            }
+        }
+        
+        function logoutUser() {
+            auth.signOut();
+        }
+        
+        function getIndonesianAuthError(code) {
+            switch(code) {
+                case 'auth/invalid-email': return 'Format email tidak valid.';
+                case 'auth/user-disabled': return 'Akun pengguna ini telah dinonaktifkan.';
+                case 'auth/user-not-found': return 'Akun dengan email ini tidak ditemukan.';
+                case 'auth/wrong-password': return 'Password yang dimasukkan salah.';
+                case 'auth/email-already-in-use': return 'Email sudah terdaftar. Silakan gunakan email lain.';
+                case 'auth/weak-password': return 'Password terlalu lemah, minimal 6 karakter.';
+                case 'auth/invalid-credential': return 'Email atau password salah.';
+                default: return 'Terjadi kesalahan: ' + code;
+            }
+        }
+
         // Configuration Data for Pairs
         const PAIR_CONFIGS = {
             'XAUUSD': {
@@ -2119,7 +2389,7 @@
             elements.warningBox.classList.remove('show');
         }
 
-        function saveCalculatorState() {
+        async function saveCalculatorState() {
             const state = {
                 balance: elements.balance.value,
                 leverage: elements.leverage.value,
@@ -2131,44 +2401,49 @@
                 tpPrice: elements.tpPrice.value,
                 tpEnable: elements.tpEnable.checked
             };
-            localStorage.setItem('calcState', JSON.stringify(state));
+            if (currentUser) {
+                try {
+                    await db.collection('users').doc(currentUser.uid).collection('settings').doc('calculator').set(state);
+                } catch(e) { console.error("Error saving calc state:", e); }
+            }
         }
 
-        function loadCalculatorState() {
-            const stateStr = localStorage.getItem('calcState');
-            if (stateStr) {
+        async function loadCalculatorState() {
+            if (currentUser) {
                 try {
-                    const state = JSON.parse(stateStr);
-                    if (state.balance) elements.balance.value = state.balance;
-                    if (state.leverage) {
-                        elements.leverage.value = state.leverage;
+                    const doc = await db.collection('users').doc(currentUser.uid).collection('settings').doc('calculator').get();
+                    if (doc.exists) {
+                        const state = doc.data();
+                        if (state.balance) elements.balance.value = state.balance;
+                        if (state.leverage) {
+                            elements.leverage.value = state.leverage;
+                            updateLeverageText();
+                        }
+                        if (state.activePair) selectPair(state.activePair);
+                        if (state.activeDirection) setDirection(state.activeDirection);
+                        if (state.riskPct) {
+                            elements.riskPct.value = state.riskPct;
+                            syncRiskPctToUsd(); // also updates slider
+                        }
+                        if (state.entryPrice) elements.entryPrice.value = state.entryPrice;
+                        if (state.slPrice) elements.slPrice.value = state.slPrice;
+                        if (state.tpPrice) elements.tpPrice.value = state.tpPrice;
+                        if (state.tpEnable !== undefined) {
+                            elements.tpEnable.checked = state.tpEnable;
+                            toggleTpEnable();
+                        }
+                    } else {
                         updateLeverageText();
+                        syncRiskPctToUsd();
+                        selectPair('XAUUSD');
                     }
-                    if (state.activePair) selectPair(state.activePair);
-                    if (state.activeDirection) setDirection(state.activeDirection);
-                    if (state.riskPct) {
-                        elements.riskPct.value = state.riskPct;
-                        syncRiskPctToUsd(); // also updates slider
-                    }
-                    if (state.entryPrice) elements.entryPrice.value = state.entryPrice;
-                    if (state.slPrice) elements.slPrice.value = state.slPrice;
-                    if (state.tpPrice) elements.tpPrice.value = state.tpPrice;
-                    if (state.tpEnable !== undefined) {
-                        elements.tpEnable.checked = state.tpEnable;
-                        toggleTpEnable();
-                    }
-                } catch(e) {}
-            } else {
-                updateLeverageText();
-                syncRiskPctToUsd();
-                selectPair('XAUUSD');
+                } catch(e) { console.error(e); }
             }
         }
 
         // Set default elements state on page load
         window.addEventListener('DOMContentLoaded', () => {
-            loadCalculatorState();
-            loadJournal(); // Load journal from storage
+            // Data will be loaded when auth state changes to logged in
         });
 
         // Tab Switching Logic
@@ -2182,8 +2457,9 @@
 
         // Trading Journal Logic
         let journalData = [];
+        let unsubscribeJournal = null;
 
-        function saveToJournal() {
+        async function saveToJournal() {
             // Validate inputs first
             const entry = parseFloat(elements.entryPrice.value) || 0;
             const slPrice = parseFloat(elements.slPrice.value) || 0;
@@ -2200,8 +2476,9 @@
             let riskPctVal = parseFloat(elements.resRiskPct.textContent) || 0; // "1.00% dari balance" -> 1.00
             let rewardPctVal = parseFloat(elements.resRewardPct.textContent) || 0;
 
+            const tradeId = Date.now().toString();
             const trade = {
-                id: Date.now().toString(),
+                timestamp: Date.now(),
                 date: new Date().toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
                 pair: activePair,
                 direction: activeDirection,
@@ -2215,158 +2492,89 @@
                 riskPct: riskPctVal,
                 rewardPct: isTpEnabled ? rewardPctVal : 0,
                 reason: '',
-                proveImgs: [],
+                linkReason: '',
+                linkHasil: '',
                 status: 'pending' // pending, win, lose, bep
             };
 
-            journalData.push(trade);
-            saveJournalToStorage();
-            loadJournal();
-            
-            alert('Trade berhasil disimpan ke Jurnal!');
-        }
-
-        function saveJournalToStorage() {
-            localStorage.setItem('tradingJournal', JSON.stringify(journalData));
+            if (currentUser) {
+                try {
+                    await db.collection('users').doc(currentUser.uid).collection('journals').doc(tradeId).set(trade);
+                    alert('Trade berhasil disimpan ke Jurnal Online!');
+                } catch(e) {
+                    alert('Gagal menyimpan: ' + e.message);
+                }
+            }
         }
 
         function loadJournal() {
-            const saved = localStorage.getItem('tradingJournal');
-            if (saved) {
-                try {
-                    journalData = JSON.parse(saved);
-                } catch(e) {
-                    journalData = [];
-                }
-            }
-            renderJournal();
-        }
-
-        function updateTradeStatus(id, newStatus) {
-            const index = journalData.findIndex(t => t.id === id);
-            if (index !== -1) {
-                journalData[index].status = newStatus;
-                saveJournalToStorage();
-                renderJournal();
+            if (currentUser) {
+                if (unsubscribeJournal) unsubscribeJournal();
+                
+                unsubscribeJournal = db.collection('users').doc(currentUser.uid).collection('journals')
+                    .orderBy('timestamp', 'asc')
+                    .onSnapshot((snapshot) => {
+                        journalData = [];
+                        snapshot.forEach((doc) => {
+                            journalData.push({ id: doc.id, ...doc.data() });
+                        });
+                        renderJournal();
+                    });
             }
         }
 
-        function deleteTrade(id) {
+        async function updateTradeStatus(id, newStatus) {
+            if (currentUser) {
+                await db.collection('users').doc(currentUser.uid).collection('journals').doc(id).update({ status: newStatus });
+            }
+        }
+
+        async function deleteTrade(id) {
             if(confirm('Apakah Anda yakin ingin menghapus data trade ini?')) {
-                journalData = journalData.filter(t => t.id !== id);
-                saveJournalToStorage();
-                renderJournal();
-            }
-        }
-
-        function updateTradeReason(id, text) {
-            const index = journalData.findIndex(t => t.id === id);
-            if (index !== -1) {
-                journalData[index].reason = text;
-                saveJournalToStorage();
-            }
-        }
-
-        function triggerImgUpload(id) {
-            document.getElementById(`upload-img-${id}`).click();
-        }
-
-        let activeTradeIdForPaste = null;
-        window.addEventListener('paste', function(e) {
-            if (!activeTradeIdForPaste) return;
-            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-            for (let index in items) {
-                const item = items[index];
-                if (item.kind === 'file') {
-                    const blob = item.getAsFile();
-                    if(blob) processImageFile(blob, activeTradeIdForPaste);
-                    return;
-                }
-            }
-        });
-
-        function handleImgUpload(event, id) {
-            const file = event.target.files[0];
-            if (!file) return;
-            processImageFile(file, id);
-        }
-
-        function deleteProveImg(tradeId, imgIndex) {
-            const index = journalData.findIndex(t => t.id === tradeId);
-            if (index !== -1) {
-                if (journalData[index].proveImgs) {
-                    journalData[index].proveImgs.splice(imgIndex, 1);
-                    saveJournalToStorage();
-                    renderJournal();
+                if (currentUser) {
+                    await db.collection('users').doc(currentUser.uid).collection('journals').doc(id).delete();
                 }
             }
         }
 
-        function processImageFile(file, id) {
-            const index = journalData.findIndex(t => t.id === id);
-            if (index === -1) return;
-            
-            // Backward compatibility for old saves
-            if (!journalData[index].proveImgs) {
-                journalData[index].proveImgs = journalData[index].proveImg ? [journalData[index].proveImg] : [];
-                delete journalData[index].proveImg;
+        let updateReasonTimeout;
+        async function updateTradeReason(id, text) {
+            if (currentUser) {
+                clearTimeout(updateReasonTimeout);
+                updateReasonTimeout = setTimeout(async () => {
+                    await db.collection('users').doc(currentUser.uid).collection('journals').doc(id).update({ reason: text });
+                }, 500);
             }
+        }
 
-            if (journalData[index].proveImgs.length >= 4) {
-                alert("Batas maksimal 4 gambar per trade.");
-                return;
-            }
-
-            // Compress image to Base64
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = function (e) {
-                const img = new Image();
-                img.src = e.target.result;
-                img.onload = function () {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 600; // max width
-                    const MAX_HEIGHT = 600;
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > height) {
-                        if (width > MAX_WIDTH) {
-                            height *= MAX_WIDTH / width;
-                            width = MAX_WIDTH;
-                        }
-                    } else {
-                        if (height > MAX_HEIGHT) {
-                            width *= MAX_HEIGHT / height;
-                            height = MAX_HEIGHT;
-                        }
+        async function editLink(id, type, currentUrl) {
+            const newUrl = prompt("Masukkan Link TradingView:", currentUrl);
+            if (newUrl !== null) {
+                if (currentUser) {
+                    try {
+                        await db.collection('users').doc(currentUser.uid).collection('journals').doc(id).update({
+                            [type]: newUrl
+                        });
+                    } catch (e) {
+                        alert("Gagal menyimpan link: " + e.message);
                     }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    // Compress to webp quality 0.5 to save more localStorage space
-                    const dataUrl = canvas.toDataURL('image/webp', 0.5);
-
-                    // Save to trade
-                    journalData[index].proveImgs.push(dataUrl);
-                    saveJournalToStorage();
-                    renderJournal();
-                };
-            };
+                }
+            }
         }
 
-        function openModalImg(src) {
-            const modal = document.getElementById('image-modal');
-            const modalImg = document.getElementById('modal-img-content');
-            modalImg.src = src;
-            modal.classList.add('active');
-        }
-
-        function closeModalImg() {
-            document.getElementById('image-modal').classList.remove('active');
+        function generateLinkHTML(type, id, url) {
+            if (url && url.trim() !== '') {
+                return `
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <a href="${url}" target="_blank" title="Buka Link" style="color:var(--color-primary);"><i data-lucide="external-link" style="width:16px; height:16px;"></i></a>
+                        <button class="btn-delete" style="background:none; border:none; padding:0; color:var(--text-muted); cursor:pointer;" onclick="editLink('${id}', '${type}', '${url}')" title="Edit Link"><i data-lucide="edit-2" style="width:14px; height:14px;"></i></button>
+                    </div>
+                `;
+            } else {
+                return `
+                    <button onclick="editLink('${id}', '${type}', '')" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#fff; border-radius:4px; font-size:0.75rem; padding:4px 8px; cursor:pointer;" title="Tambah Link">+ Link</button>
+                `;
+            }
         }
 
         function renderJournal() {
@@ -2408,8 +2616,6 @@
                     }
 
                     const tr = document.createElement('tr');
-                    tr.onmouseenter = () => { activeTradeIdForPaste = t.id; };
-                    tr.onmouseleave = () => { activeTradeIdForPaste = null; };
                     
                     // Status Dropdown
                     const selectHTML = `
@@ -2421,46 +2627,9 @@
                         </select>
                     `;
 
-                    // Prove Image logic
-                    let proveHTML = '';
-                    // Backward compat
-                    let imgs = t.proveImgs || [];
-                    if (t.proveImg && imgs.length === 0) {
-                        imgs = [t.proveImg];
-                    }
-
-                    if (imgs.length > 0) {
-                        let thumbsHTML = imgs.map((src, idx) => `
-                            <div class="prove-thumbnail-wrapper">
-                                <img src="${src}" class="prove-thumbnail" onclick="openModalImg('${src}')" title="Klik memperbesar">
-                                <button class="prove-thumbnail-delete" onclick="deleteProveImg('${t.id}', ${idx})" title="Hapus gambar">x</button>
-                            </div>
-                        `).join('');
-
-                        let addMoreBtn = '';
-                        if (imgs.length < 4) {
-                            addMoreBtn = `
-                                <div class="prove-upload-btn" onclick="triggerImgUpload('${t.id}')" title="Tambah Bukti (Bisa Paste Ctrl+V)" style="width: 40px; height: 40px;">
-                                    <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
-                                </div>
-                            `;
-                        }
-
-                        proveHTML = `
-                            <div class="prove-thumbnails-container">
-                                ${thumbsHTML}
-                                ${addMoreBtn}
-                            </div>
-                            <input type="file" id="upload-img-${t.id}" accept="image/*" style="display:none" onchange="handleImgUpload(event, '${t.id}')">
-                        `;
-                    } else {
-                        proveHTML = `
-                            <div class="prove-upload-btn" onclick="triggerImgUpload('${t.id}')" title="Upload Bukti atau Arahkan mouse ke baris ini lalu tekan Ctrl+V (Paste)">
-                                <i data-lucide="image-plus" style="width: 18px; height: 18px;"></i>
-                            </div>
-                            <input type="file" id="upload-img-${t.id}" accept="image/*" style="display:none" onchange="handleImgUpload(event, '${t.id}')">
-                        `;
-                    }
+                    // Generate Link UI
+                    const reasonHTML = generateLinkHTML('linkReason', t.id, t.linkReason);
+                    const hasilHTML = generateLinkHTML('linkHasil', t.id, t.linkHasil);
 
                     tr.innerHTML = `
                         <td>${t.date}</td>
@@ -2473,7 +2642,8 @@
                         <td style="font-weight:600; color:#fff;">${t.rr || 'N/A'}</td>
                         <td><span style="color:var(--color-danger);">${t.risk}</span> / <span style="color:var(--color-success);">${t.reward}</span></td>
                         <td><textarea class="reason-input" placeholder="Alasan..." onchange="updateTradeReason('${t.id}', this.value)">${t.reason || ''}</textarea></td>
-                        <td>${proveHTML}</td>
+                        <td>${reasonHTML}</td>
+                        <td>${hasilHTML}</td>
                         <td>${selectHTML}</td>
                         <td><button class="btn-delete" onclick="deleteTrade('${t.id}')" title="Hapus Trade"><i data-lucide="trash-2" style="width:14px; height:14px;"></i></button></td>
                     `;
