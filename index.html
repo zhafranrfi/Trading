@@ -1,0 +1,2870 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risk Management Calculator</title>
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="icon" href="./icon.svg" type="image/svg+xml">
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-base: #0b0f19;
+            --bg-surface: rgba(17, 24, 39, 0.7);
+            --bg-surface-hover: rgba(31, 41, 55, 0.8);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(59, 130, 246, 0.15);
+
+            --color-primary: #3b82f6;
+            /* Blue */
+            --color-primary-glow: rgba(59, 130, 246, 0.35);
+            --color-success: #10b981;
+            /* Emerald Green */
+            --color-success-glow: rgba(16, 185, 129, 0.2);
+            --color-danger: #ef4444;
+            /* Crimson Red */
+            --color-danger-glow: rgba(239, 68, 68, 0.2);
+            --color-warning: #f59e0b;
+            /* Amber */
+            --color-warning-glow: rgba(245, 158, 11, 0.2);
+            --color-gold: #fbbf24;
+            --color-silver: #9ca3af;
+
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --text-dim: #6b7280;
+
+            --font-display: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+
+            --card-radius: 16px;
+            --transition-speed: 0.2s;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-body);
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 40%);
+            background-attachment: fixed;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1280px;
+            margin: 0 auto;
+            overflow-x: hidden;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        header h1 {
+            font-family: var(--font-display);
+            font-size: 2.25rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 40%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.025em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+
+        /* 2-Column Grid Layout */
+        .app-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .app-grid {
+                grid-template-columns: 1fr;
+            }
+
+            body {
+                padding: 1rem 0.5rem;
+            }
+        }
+
+        /* Card Container (Glassmorphism) */
+        .glass-card {
+            background: var(--bg-surface);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-radius);
+            padding: 1.75rem;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+        }
+
+        .glass-card:hover {
+            border-color: var(--border-glow);
+            box-shadow: 0 10px 30px -5px rgba(59, 130, 246, 0.05);
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+        }
+
+        /* Pair Selection Grid */
+        .pair-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 480px) {
+            .pair-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .pair-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pair-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .pair-card.active {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--color-primary);
+            box-shadow: 0 0 12px var(--border-glow);
+        }
+
+        .pair-card.gold-pair.active {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: var(--color-warning);
+            box-shadow: 0 0 12px var(--color-warning-glow);
+        }
+
+        .pair-card.silver-pair.active {
+            background: rgba(156, 163, 175, 0.1);
+            border-color: var(--color-silver);
+            box-shadow: 0 0 12px rgba(156, 163, 175, 0.2);
+        }
+
+        .pair-symbol {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 0.02em;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .pair-type {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .pair-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: none;
+        }
+
+        .pair-card.active .pair-badge {
+            display: block;
+        }
+
+        .pair-card.gold-pair .pair-badge {
+            background-color: var(--color-warning);
+        }
+
+        .pair-card.silver-pair .pair-badge {
+            background-color: var(--color-silver);
+        }
+
+        .pair-card:not(.gold-pair):not(.silver-pair) .pair-badge {
+            background-color: var(--color-primary);
+        }
+
+        /* Form Controls */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        @media (max-width: 640px) {
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 640px) {
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .label-extra {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon-left {
+            position: absolute;
+            left: 0.75rem;
+            color: var(--text-dim);
+            width: 16px;
+            height: 16px;
+            pointer-events: none;
+        }
+
+        .input-unit-right {
+            position: absolute;
+            right: 0.75rem;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            font-weight: 600;
+            pointer-events: none;
+            text-transform: uppercase;
+        }
+
+        input[type="number"],
+        select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.65rem 0.75rem;
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all var(--transition-speed);
+        }
+
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--border-glow);
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .input-icon-padding {
+            padding-left: 2rem !important;
+        }
+
+        .input-unit-padding {
+            padding-right: 2.25rem !important;
+        }
+
+        /* Slider Styles */
+        .slider-container {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            cursor: pointer;
+            transition: transform var(--transition-speed);
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        /* Direction Switch (Buy/Sell Toggle) */
+        .direction-toggle {
+            display: flex;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 3px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.25rem;
+        }
+
+        .direction-btn {
+            flex: 1;
+            padding: 0.5rem;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all var(--transition-speed);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+        }
+
+        .direction-btn.active.buy {
+            background: var(--color-success);
+            color: #ffffff;
+            box-shadow: 0 2px 8px var(--color-success-glow);
+        }
+
+        .direction-btn.active.sell {
+            background: var(--color-danger);
+            color: #ffffff;
+            box-shadow: 0 2px 8px var(--color-danger-glow);
+        }
+
+        /* Quick Buttons Grid */
+        .quick-risk-btns {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.35rem;
+            margin-top: 0.35rem;
+        }
+
+        .quick-risk-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 0.3rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+        }
+
+        .quick-risk-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+        }
+
+        /* Results Panel CSS */
+        .results-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Main Output Panel Card */
+        .lot-display-card {
+            background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.1), transparent), var(--bg-surface);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            text-align: center;
+            padding: 2rem 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lot-display-card.gold-active {
+            background: radial-gradient(circle at top right, rgba(245, 158, 11, 0.1), transparent), var(--bg-surface);
+            border-color: rgba(245, 158, 11, 0.25);
+        }
+
+        .lot-display-card.silver-active {
+            background: radial-gradient(circle at top right, rgba(156, 163, 175, 0.1), transparent), var(--bg-surface);
+            border-color: rgba(156, 163, 175, 0.25);
+        }
+
+        .lot-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .lot-value {
+            font-family: var(--font-display);
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .lot-desc {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-bottom: 1.25rem;
+        }
+
+        /* Lot units grid */
+        .units-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .unit-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .unit-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-dim);
+        }
+
+        .unit-val {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        /* Metric Grid Row */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-icon {
+            width: 14px;
+            height: 14px;
+            color: var(--text-dim);
+        }
+
+        .metric-icon.risk-color {
+            color: var(--color-danger);
+        }
+
+        .metric-icon.reward-color {
+            color: var(--color-success);
+        }
+
+        .metric-icon.margin-color {
+            color: var(--color-primary);
+        }
+
+        .metric-val {
+            font-family: var(--font-display);
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.2;
+        }
+
+        .metric-subval {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 0.15rem;
+        }
+
+        /* Risk vs Reward Bar Visualizer */
+        .rr-visualizer {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            margin-top: 0.5rem;
+            width: 100%;
+        }
+
+        .rr-bar-outer {
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .rr-bar-risk {
+            height: 100%;
+            background: var(--color-danger);
+            transition: width 0.3s;
+        }
+
+        .rr-bar-reward {
+            height: 100%;
+            background: var(--color-success);
+            transition: width 0.3s;
+        }
+
+        /* Margin Progress Gauge */
+        .margin-gauge-container {
+            margin-top: 0.5rem;
+        }
+
+        .margin-bar-outer {
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.05);
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .margin-bar-inner {
+            height: 100%;
+            width: 0%;
+            background: var(--color-primary);
+            transition: width 0.3s, background-color 0.3s;
+        }
+
+        /* Warnings and Alerts */
+        .alert-box {
+            display: none;
+            align-items: flex-start;
+            gap: 0.65rem;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            padding: 0.75rem;
+            border-radius: 8px;
+            color: #fca5a5;
+            font-size: 0.8rem;
+            line-height: 1.35;
+        }
+
+        .alert-box.show {
+            display: flex;
+        }
+
+        .alert-icon {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        /* Trading Cheat Sheet */
+        .cheat-sheet-card {
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .cheat-sheet-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-size: 0.8rem;
+        }
+
+        .cheat-sheet-row:last-child {
+            border-bottom: none;
+        }
+
+        .cheat-label {
+            color: var(--text-muted);
+        }
+
+        .cheat-value {
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        /* Sync indicator animation for input fields */
+        .sync-active {
+            animation: pulse-border 1.5s infinite;
+        }
+
+        @keyframes pulse-border {
+            0% {
+                border-color: var(--border-color);
+            }
+
+            50% {
+                border-color: rgba(59, 130, 246, 0.3);
+            }
+
+            100% {
+                border-color: var(--border-color);
+            }
+        }
+
+        .tp-header-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            cursor: pointer;
+        }
+
+        .tp-header-checkbox input {
+            accent-color: var(--color-success);
+        }
+
+        /* Tabs System */
+        .tabs-container {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .tab-btn.active {
+            background: var(--color-primary-glow);
+            border-color: var(--color-primary);
+            color: #ffffff;
+            box-shadow: 0 0 15px var(--border-glow);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+            width: 100%;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Journal specific styles */
+        .journal-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .journal-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .stat-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .stat-value {
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        
+        .save-btn {
+            width: 100%;
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all var(--transition-speed);
+            margin-top: 1.5rem;
+        }
+
+        .save-btn:hover {
+            background: #2563eb;
+            box-shadow: 0 4px 12px var(--color-primary-glow);
+        }
+
+        .table-container {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        .journal-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        .journal-table th, .journal-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.85rem;
+            vertical-align: middle;
+        }
+
+        .journal-table th {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        .journal-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .journal-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .status-select {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            outline: none;
+            cursor: pointer;
+            width: 90px;
+        }
+        
+        .status-select.win { color: var(--color-success); border-color: var(--color-success); }
+        .status-select.lose { color: var(--color-danger); border-color: var(--color-danger); }
+        .status-select.bep { color: var(--color-warning); border-color: var(--color-warning); }
+        .status-select.pending { color: var(--text-muted); }
+
+        .btn-delete {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--color-danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 4px;
+            padding: 0.25rem 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-delete:hover {
+            background: var(--color-danger);
+            color: white;
+        }
+
+        .empty-journal {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+            display: none;
+        }
+
+        /* Journal Enhancements CSS */
+        .reason-input {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            width: 200px;
+            min-height: 60px;
+            resize: vertical;
+            transition: border-color 0.2s;
+            font-family: inherit;
+            line-height: 1.4;
+        }
+        .reason-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+
+        .prove-thumbnails-container {
+            display: flex;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+            max-width: 140px;
+        }
+        
+        .prove-thumbnail-wrapper {
+            position: relative;
+        }
+        
+        .prove-thumbnail-delete {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 14px;
+            height: 14px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .prove-thumbnail {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s;
+        }
+        .prove-thumbnail:hover {
+            transform: scale(1.1);
+        }
+
+        .prove-upload-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px dashed var(--text-muted);
+            color: var(--text-muted);
+            border-radius: 4px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .prove-upload-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        /* Modal for large image */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            padding: 2rem;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-img {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .modal-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .modal-close:hover {
+            background: rgba(239, 68, 68, 0.8);
+        }
+
+        /* Auth Modal */
+        .auth-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-base);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            transition: opacity 0.3s;
+        }
+        .auth-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-radius);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            text-align: center;
+        }
+        .auth-title {
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+        .auth-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+        .auth-form-group {
+            text-align: left;
+            margin-bottom: 1.25rem;
+        }
+        .auth-form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .auth-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            color: #ffffff;
+            font-size: 1rem;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+        .auth-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--border-glow);
+        }
+        .auth-btn {
+            width: 100%;
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 1rem;
+        }
+        .auth-btn:hover {
+            background: #2563eb;
+            box-shadow: 0 4px 12px var(--color-primary-glow);
+        }
+        .auth-switch {
+            margin-top: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .auth-switch a {
+            color: var(--color-primary);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+        .auth-error {
+            color: var(--color-danger);
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            display: none;
+            text-align: left;
+        }
+        .user-profile-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            z-index: 50;
+        }
+        .logout-btn {
+            background: transparent;
+            border: none;
+            color: var(--color-danger);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .logout-btn:hover {
+            text-decoration: underline;
+        }
+    </style>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+</head>
+
+<body>
+
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="auth-overlay">
+        <div class="auth-card">
+            <i data-lucide="shield-check" style="color: var(--color-primary); width: 48px; height: 48px; margin-bottom: 1rem;"></i>
+            <h2 class="auth-title" id="auth-title">Masuk</h2>
+            <p class="auth-desc" id="auth-desc">Silakan masuk untuk menyimpan jurnal Anda secara online.</p>
+            
+            <div id="auth-error-msg" class="auth-error">Error message here</div>
+            
+            <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+                <div class="auth-form-group">
+                    <label>Email</label>
+                    <input type="email" id="auth-email" class="auth-input" required placeholder="email@contoh.com">
+                </div>
+                <div class="auth-form-group">
+                    <label>Password</label>
+                    <input type="password" id="auth-password" class="auth-input" required placeholder="Minimal 6 karakter">
+                </div>
+                <button type="submit" class="auth-btn" id="auth-submit-btn">Masuk</button>
+            </form>
+            
+            <div class="auth-switch">
+                <span id="auth-switch-text">Belum punya akun?</span>
+                <a id="auth-switch-link" onclick="toggleAuthMode()">Daftar sekarang</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-content" style="display: none;">
+        <div class="user-profile-badge">
+            <i data-lucide="user" style="width: 14px; height: 14px;"></i>
+            <span id="user-email-display">user@email.com</span>
+            <span style="color: var(--border-color)">|</span>
+            <button class="logout-btn" onclick="logoutUser()">Logout</button>
+        </div>
+
+    <div class="container">
+        <header>
+            <h1><i data-lucide="shield-check" style="color: var(--color-primary); width: 32px; height: 32px;"></i>
+                Risk Management Calculator</h1>
+            <p>Kalkulator Manajemen Risiko Trading Forex</p>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs-container">
+            <button class="tab-btn active" onclick="switchTab('calculator')" id="tab-btn-calculator">
+                <i data-lucide="calculator"></i> Calculator
+            </button>
+            <button class="tab-btn" onclick="switchTab('journal')" id="tab-btn-journal">
+                <i data-lucide="book-open"></i> Trading Journal
+            </button>
+        </div>
+
+        <!-- Calculator Tab -->
+        <div id="calculator-tab" class="tab-content active">
+            <div class="app-grid">
+            <!-- Input Panel -->
+            <div class="glass-card">
+                <h2 class="section-title"><i data-lucide="settings"></i> 1. Pengaturan Trading</h2>
+
+                <!-- Pair Selection -->
+                <label style="margin-bottom: 0.5rem;">Pilih Pair Trading <span class="label-extra"
+                        id="selected-pair-desc">XAUUSD - Emas</span></label>
+                <div class="pair-grid">
+                    <!-- XAUUSD -->
+                    <div class="pair-card gold-pair active" onclick="selectPair('XAUUSD')" id="pair-XAUUSD">
+                        <span class="pair-badge"></span>
+                        <span class="pair-symbol" style="color: var(--color-gold);">XAUUSD</span>
+                        <span class="pair-type">Gold</span>
+                    </div>
+                    <!-- XAGUSD -->
+                    <div class="pair-card silver-pair" onclick="selectPair('XAGUSD')" id="pair-XAGUSD">
+                        <span class="pair-badge"></span>
+                        <span class="pair-symbol" style="color: var(--color-silver);">XAGUSD</span>
+                        <span class="pair-type">Silver</span>
+                    </div>
+                    <!-- EURUSD -->
+                    <div class="pair-card" onclick="selectPair('EURUSD')" id="pair-EURUSD">
+                        <span class="pair-badge"></span>
+                        <span class="pair-symbol">EURUSD</span>
+                        <span class="pair-type">Forex</span>
+                    </div>
+                    <!-- GBPUSD -->
+                    <div class="pair-card" onclick="selectPair('GBPUSD')" id="pair-GBPUSD">
+                        <span class="pair-badge"></span>
+                        <span class="pair-symbol">GBPUSD</span>
+                        <span class="pair-type">Forex</span>
+                    </div>
+                    <!-- AUDUSD -->
+                    <div class="pair-card" onclick="selectPair('AUDUSD')" id="pair-AUDUSD">
+                        <span class="pair-badge"></span>
+                        <span class="pair-symbol">AUDUSD</span>
+                        <span class="pair-type">Forex</span>
+                    </div>
+                    <!-- NZDUSD -->
+                    <div class="pair-card" onclick="selectPair('NZDUSD')" id="pair-NZDUSD">
+                        <span class="pair-badge"></span>
+                        <span class="pair-symbol">NZDUSD</span>
+                        <span class="pair-type">Forex</span>
+                    </div>
+                    <!-- USDCAD -->
+                    <div class="pair-card" onclick="selectPair('USDCAD')" id="pair-USDCAD">
+                        <span class="pair-badge"></span>
+                        <span class="pair-symbol">USDCAD</span>
+                        <span class="pair-type">Forex</span>
+                    </div>
+                    <!-- USDJPY -->
+                    <div class="pair-card" onclick="selectPair('USDJPY')" id="pair-USDJPY">
+                        <span class="pair-badge"></span>
+                        <span class="pair-symbol">USDJPY</span>
+                        <span class="pair-type">Forex</span>
+                    </div>
+                    <!-- USDCHF -->
+                    <div class="pair-card" onclick="selectPair('USDCHF')" id="pair-USDCHF">
+                        <span class="pair-badge"></span>
+                        <span class="pair-symbol">USDCHF</span>
+                        <span class="pair-type">Forex</span>
+                    </div>
+                    <!-- BTCUSD -->
+                    <div class="pair-card" onclick="selectPair('BTCUSD')" id="pair-BTCUSD">
+                        <span class="pair-badge"></span>
+                        <span class="pair-symbol">BTCUSD</span>
+                        <span class="pair-type">Crypto</span>
+                    </div>
+                    <!-- NDX100 -->
+                    <div class="pair-card" onclick="selectPair('NDX100')" id="pair-NDX100">
+                        <span class="pair-badge"></span>
+                        <span class="pair-symbol">NDX100</span>
+                        <span class="pair-type">Indices</span>
+                    </div>
+                    <!-- XTIUSD -->
+                    <div class="pair-card" onclick="selectPair('XTIUSD')" id="pair-XTIUSD">
+                        <span class="pair-badge"></span>
+                        <span class="pair-symbol">XTIUSD</span>
+                        <span class="pair-type">Commodity</span>
+                    </div>
+                </div>
+
+                <!-- Account Details -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="balance">Saldo Akun (Balance)<span class="label-extra">USD</span></label>
+                        <div class="input-wrapper">
+                            <i data-lucide="dollar-sign" class="input-icon-left"></i>
+                            <input type="number" id="balance" class="input-icon-padding input-unit-padding"
+                                value="10000" min="1" step="any" oninput="calculate()">
+                            <span class="input-unit-right">USD</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="leverage">Leverage Akun <span class="label-extra"
+                                id="leverage-val">1:100</span></label>
+                        <div class="form-group">
+                            <select id="leverage" onchange="updateLeverageText(); calculate();">
+                                <option value="1">1:1 (No Leverage)</option>
+                                <option value="10">1:10</option>
+                                <option value="50">1:50</option>
+                                <option value="100" selected>1:100</option>
+                                <option value="200">1:200</option>
+                                <option value="500">1:500</option>
+                                <option value="1000">1:1000</option>
+                                <option value="2000">1:2000</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="section-title" style="margin-top: 2rem;"><i data-lucide="percent"></i> 2. Parameter Risiko
+                </h2>
+
+                <!-- Risk Settings -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="risk-pct">Persentase Risiko <span class="label-extra"
+                                id="risk-pct-label">1.0%</span></label>
+                        <div class="input-wrapper">
+                            <input type="number" id="risk-pct" class="input-unit-padding" value="1.0" min="0.01"
+                                max="100" step="0.05" oninput="syncRiskPctToUsd()">
+                            <span class="input-unit-right">%</span>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" id="risk-pct-slider" min="0.1" max="5.0" value="1.0" step="0.1"
+                                oninput="syncSliderToRiskPct()">
+                            <div class="quick-risk-btns">
+                                <button class="quick-risk-btn" onclick="setRiskPct(0.5)">0.5%</button>
+                                <button class="quick-risk-btn" onclick="setRiskPct(1.0)">1.0%</button>
+                                <button class="quick-risk-btn" onclick="setRiskPct(2.0)">2.0%</button>
+                                <button class="quick-risk-btn" onclick="setRiskPct(5.0)">5.0%</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="risk-usd">Nominal Risiko <span class="label-extra">USD</span></label>
+                        <div class="input-wrapper">
+                            <i data-lucide="dollar-sign" class="input-icon-left"></i>
+                            <input type="number" id="risk-usd" class="input-icon-padding input-unit-padding" value="100"
+                                min="0.01" step="any" oninput="syncRiskUsdToPct()">
+                            <span class="input-unit-right">USD</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Direction Switch -->
+                <label style="margin-bottom: 0.5rem;">Arah Posisi (Trade Direction)</label>
+                <div class="direction-toggle">
+                    <button class="direction-btn active buy" id="dir-buy" onclick="setDirection('BUY')">
+                        <i data-lucide="trending-up"></i> BUY (LONG)
+                    </button>
+                    <button class="direction-btn sell" id="dir-sell" onclick="setDirection('SELL')">
+                        <i data-lucide="trending-down"></i> SELL (SHORT)
+                    </button>
+                </div>
+
+                <!-- Price & SL Settings -->
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label for="entry-price">Harga Masuk (Entry Price) <span class="label-extra" id="digits-info">2
+                                desimal</span></label>
+                        <input type="number" id="entry-price" value="2350.00" min="0.00001" step="any"
+                            oninput="entryPriceChanged()">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="sl-price">Stop Loss (Harga) <span class="label-extra text-danger"
+                                id="sl-price-label">Di bawah entry</span></label>
+                        <input type="number" id="sl-price" value="2340.00" min="0.00001" step="any"
+                            oninput="slPriceChanged()">
+                    </div>
+                    <div class="form-group">
+                        <label for="sl-pips">Stop Loss (Pips) <span class="label-extra" id="sl-pips-label">1 pip = 0.1
+                                USD</span></label>
+                        <div class="input-wrapper">
+                            <input type="number" id="sl-pips" class="input-unit-padding" value="100" min="0.1"
+                                step="any" oninput="slPipsChanged()">
+                            <span class="input-unit-right">Pips</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Take Profit Settings -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tp-price" style="display:flex; justify-content:space-between; width:100%;">
+                            <span>Take Profit (Harga)</span>
+                            <span class="tp-header-checkbox">
+                                <input type="checkbox" id="tp-enable" checked onchange="toggleTpEnable()">
+                                <span style="font-size:0.75rem;">Aktif</span>
+                            </span>
+                        </label>
+                        <input type="number" id="tp-price" value="2380.00" min="0.00001" step="any"
+                            oninput="tpPriceChanged()">
+                    </div>
+                    <div class="form-group">
+                        <label for="tp-pips">Take Profit (Pips) <span class="label-extra">Reward target</span></label>
+                        <div class="input-wrapper">
+                            <input type="number" id="tp-pips" class="input-unit-padding" value="300" min="0.1"
+                                step="any" oninput="tpPipsChanged()">
+                            <span class="input-unit-right">Pips</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Results Panel -->
+            <div class="results-container">
+                <!-- Lot Size Results Card -->
+                <div class="glass-card lot-display-card" id="lot-card">
+                    <div class="lot-title">Lot Size Rekomendasi</div>
+                    <div class="lot-value" id="calc-lot">0.10</div>
+                    <div class="lot-desc" id="lot-desc">Standard Lot</div>
+
+                    <div class="units-grid">
+                        <div class="unit-item">
+                            <span class="unit-label">Standard Lots</span>
+                            <span class="unit-val" id="lot-standard">0.10</span>
+                        </div>
+                        <div class="unit-item">
+                            <span class="unit-label">Mini Lots (0.1)</span>
+                            <span class="unit-val" id="lot-mini">1.0</span>
+                        </div>
+                        <div class="unit-item">
+                            <span class="unit-label">Micro Lots (0.01)</span>
+                            <span class="unit-val" id="lot-micro">10.0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risk & Reward Metrics -->
+                <div class="glass-card">
+                    <h2 class="section-title"><i data-lucide="bar-chart-2"></i> Risiko & Imbal Hasil</h2>
+
+                    <div class="metrics-grid">
+                        <div class="metric-card" style="border-color: rgba(239, 68, 68, 0.15);">
+                            <div class="metric-header">
+                                <span>Total Risiko</span>
+                                <i data-lucide="shield-alert" class="metric-icon risk-color"></i>
+                            </div>
+                            <div class="metric-val" id="res-risk-usd">-$100.00</div>
+                            <div class="metric-subval" id="res-risk-pct">1.00% dari balance</div>
+                        </div>
+
+                        <div class="metric-card" id="reward-card" style="border-color: rgba(16, 185, 129, 0.15);">
+                            <div class="metric-header">
+                                <span>Estimasi Keuntungan</span>
+                                <i data-lucide="trophy" class="metric-icon reward-color"></i>
+                            </div>
+                            <div class="metric-val" id="res-reward-usd">+$300.00</div>
+                            <div class="metric-subval" id="res-reward-pct">3.00% dari balance</div>
+                        </div>
+                    </div>
+
+                    <div class="rr-visualizer" style="margin-top: 1.25rem;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.8rem; font-weight: 500;">
+                            <span style="color:var(--text-muted);">Risk : Reward Ratio</span>
+                            <span id="res-rr-ratio" style="color: #ffffff; font-weight:600;">1 : 3.00</span>
+                        </div>
+                        <div class="rr-bar-outer">
+                            <div class="rr-bar-risk" id="rr-bar-risk" style="width: 25%;"></div>
+                            <div class="rr-bar-reward" id="rr-bar-reward" style="width: 75%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Margin and Leverage Analytics -->
+                <div class="glass-card">
+                    <h2 class="section-title"><i data-lucide="wallet"></i> Margin & Leverage</h2>
+
+                    <div class="metrics-grid">
+                        <div class="metric-card" style="border-color: rgba(59, 130, 246, 0.15);">
+                            <div class="metric-header">
+                                <span>Margin Dibutuhkan</span>
+                                <i data-lucide="landmark" class="metric-icon margin-color"></i>
+                            </div>
+                            <div class="metric-val" id="res-margin-usd">$235.00</div>
+                            <div class="metric-subval" id="res-margin-level">Usage: 2.35%</div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <span>Maksimum Lot</span>
+                                <i data-lucide="activity" class="metric-icon"></i>
+                            </div>
+                            <div class="metric-val" id="res-max-lot">4.25</div>
+                            <div class="metric-subval" id="res-free-margin">Margin Maksimum</div>
+                        </div>
+                    </div>
+
+                    <!-- Margin usage progress bar -->
+                    <div class="margin-gauge-container" style="margin-top: 1.25rem;">
+                        <div
+                            style="display:flex; justify-content:space-between; font-size:0.8rem; font-weight: 500; margin-bottom: 0.25rem;">
+                            <span style="color:var(--text-muted);">Kapasitas Margin Terpakai</span>
+                            <span id="margin-usage-pct" style="color: #ffffff; font-weight:600;">2.35%</span>
+                        </div>
+                        <div class="margin-bar-outer">
+                            <div class="margin-bar-inner" id="margin-bar-inner" style="width: 2.35%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Warning box -->
+                    <div class="alert-box" id="warning-box" style="margin-top: 1.25rem;">
+                        <i data-lucide="alert-triangle" class="alert-icon"></i>
+                        <span id="warning-text">Saldo Anda tidak mencukupi untuk membuka lot yang direkomendasikan
+                            dengan leverage saat ini. Kurangi Stop Loss, kurangi risiko, atau naikkan leverage
+                            Anda.</span>
+                    </div>
+                </div>
+
+                <!-- Trading Info Reference -->
+                <div class="glass-card cheat-sheet-card">
+                    <h2 class="section-title"
+                        style="font-size: 1.1rem; margin-bottom: 0.75rem; padding-bottom: 0.5rem;"><i
+                            data-lucide="info"></i> Informasi Pair (<span id="info-pair-code">XAUUSD</span>)</h2>
+                    <div class="cheat-sheet-row">
+                        <span class="cheat-label">Ukuran Kontrak per Lot (Contract Size)</span>
+                        <span class="cheat-value" id="info-contract-size">100 Ounces</span>
+                    </div>
+                    <div class="cheat-sheet-row">
+                        <span class="cheat-label">Definisi 1 Pip</span>
+                        <span class="cheat-value" id="info-pip-def">0.1 USD</span>
+                    </div>
+                    <div class="cheat-sheet-row">
+                        <span class="cheat-label">Nilai Pip per Standard Lot (1.0 lot)</span>
+                        <span class="cheat-value" id="info-pip-val">$10.00 USD</span>
+                    </div>
+                    <div class="cheat-sheet-row">
+                        <span class="cheat-label">Formula Margin</span>
+                        <span class="cheat-value" id="info-margin-formula">(Lot * Contract Size * Entry) /
+                            Leverage</span>
+                    </div>
+                </div>
+
+                <!-- Custom Date for Backtesting -->
+                <div class="input-group" style="margin-bottom: 1rem;">
+                    <label>Tanggal Trade (Opsional, untuk backtesting)</label>
+                    <input type="datetime-local" id="backtest-date" class="number-input">
+                </div>
+
+                <!-- Save to Journal Button -->
+                <button class="save-btn" onclick="saveToJournal()">
+                    <i data-lucide="save"></i> Simpan ke Jurnal
+                </button>
+            </div>
+        </div>
+        </div> <!-- End of Calculator Tab -->
+
+        <!-- Journal Tab -->
+        <div id="journal-tab" class="tab-content">
+            <div class="journal-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-total">0</div>
+                    <div class="stat-label">Total Trades</div>
+                </div>
+                <div class="stat-card" style="border-color: rgba(16, 185, 129, 0.3);">
+                    <div class="stat-value" id="stat-winrate" style="color: var(--color-success);">0%</div>
+                    <div class="stat-label">Win Rate</div>
+                </div>
+                <div class="stat-card" style="border-color: rgba(59, 130, 246, 0.3);">
+                    <div class="stat-value" id="stat-pnl" style="color: var(--color-primary);">0.00%</div>
+                    <div class="stat-label">Net P&L (%)</div>
+                </div>
+                <div class="stat-card" style="border-color: rgba(156, 163, 175, 0.3);">
+                    <div class="stat-value" id="stat-wlb" style="color: var(--color-silver); font-size: 1.25rem; margin-top: 0.25rem;">0 / 0 / 0</div>
+                    <div class="stat-label">Win / Lose / BEP</div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="journal-table">
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th>Pair</th>
+                            <th>Arah</th>
+                            <th>Entry</th>
+                            <th>SL</th>
+                            <th>TP</th>
+                            <th>Close Price</th>
+                            <th>Lot</th>
+                            <th>R:R</th>
+                            <th>Risk / Reward</th>
+                            <th>Reason</th>
+                            <th>Prove Reason</th>
+                            <th>Prove Hasil</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="journal-tbody">
+                        <!-- Journal entries populated here -->
+                    </tbody>
+                </table>
+                <div id="empty-journal-msg" class="empty-journal">
+                    <i data-lucide="inbox" style="width: 48px; height: 48px; opacity: 0.5; margin-bottom: 1rem; margin: 0 auto; display: block;"></i>
+                    <p>Belum ada data jurnal trading.</p>
+                </div>
+            </div>
+        </div> <!-- End of Journal Tab -->
+
+    </div>
+    </div> <!-- End of app-content -->
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyC8PLpx6jj15ZbifwJ0utGdiRGW_iWmDYQ",
+          authDomain: "datatestingtrade.firebaseapp.com",
+          projectId: "datatestingtrade",
+          storageBucket: "datatestingtrade.firebasestorage.app",
+          messagingSenderId: "709746424130",
+          appId: "1:709746424130:web:fb261fafdb6a5833e9b0db",
+          measurementId: "G-712HZCNB5F"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+        
+        let currentUser = null;
+        let authMode = 'login'; // 'login' or 'register'
+        
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('app-content').style.display = 'block';
+                document.getElementById('user-email-display').textContent = user.email;
+                
+                // Re-init icons for dynamic elements
+                lucide.createIcons();
+                
+                // Load data from Firebase
+                loadCalculatorState();
+                loadJournal();
+            } else {
+                currentUser = null;
+                document.getElementById('auth-screen').style.display = 'flex';
+                document.getElementById('app-content').style.display = 'none';
+                
+                // Clear state when logged out
+                journalData = [];
+                renderJournal();
+            }
+        });
+        
+        function toggleAuthMode() {
+            authMode = authMode === 'login' ? 'register' : 'login';
+            document.getElementById('auth-title').textContent = authMode === 'login' ? 'Masuk' : 'Daftar';
+            document.getElementById('auth-desc').textContent = authMode === 'login' ? 'Silakan masuk untuk menyimpan jurnal Anda secara online.' : 'Buat akun baru untuk mulai menyimpan jurnal.';
+            document.getElementById('auth-submit-btn').textContent = authMode === 'login' ? 'Masuk' : 'Daftar';
+            document.getElementById('auth-switch-text').textContent = authMode === 'login' ? 'Belum punya akun?' : 'Sudah punya akun?';
+            document.getElementById('auth-switch-link').textContent = authMode === 'login' ? 'Daftar sekarang' : 'Masuk di sini';
+            document.getElementById('auth-error-msg').style.display = 'none';
+        }
+        
+        async function handleAuthSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const errorMsg = document.getElementById('auth-error-msg');
+            const submitBtn = document.getElementById('auth-submit-btn');
+            
+            errorMsg.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Memproses...';
+            
+            try {
+                if (authMode === 'login') {
+                    await auth.signInWithEmailAndPassword(email, password);
+                } else {
+                    await auth.createUserWithEmailAndPassword(email, password);
+                }
+                document.getElementById('auth-email').value = '';
+                document.getElementById('auth-password').value = '';
+            } catch (error) {
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = getIndonesianAuthError(error.code);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = authMode === 'login' ? 'Masuk' : 'Daftar';
+            }
+        }
+        
+        function logoutUser() {
+            auth.signOut();
+        }
+        
+        function getIndonesianAuthError(code) {
+            switch(code) {
+                case 'auth/invalid-email': return 'Format email tidak valid.';
+                case 'auth/user-disabled': return 'Akun pengguna ini telah dinonaktifkan.';
+                case 'auth/user-not-found': return 'Akun dengan email ini tidak ditemukan.';
+                case 'auth/wrong-password': return 'Password yang dimasukkan salah.';
+                case 'auth/email-already-in-use': return 'Email sudah terdaftar. Silakan gunakan email lain.';
+                case 'auth/weak-password': return 'Password terlalu lemah, minimal 6 karakter.';
+                case 'auth/invalid-credential': return 'Email atau password salah.';
+                default: return 'Terjadi kesalahan: ' + code;
+            }
+        }
+
+        // Configuration Data for Pairs
+        const PAIR_CONFIGS = {
+            'XAUUSD': {
+                name: 'Gold vs US Dollar',
+                type: 'Metal',
+                defaultPrice: 2350.00,
+                contractSize: 100,
+                pipSize: 0.1,
+                digits: 2,
+                pipValueBase: 10.00, // Pip value at 1.0 lot in quote (USD)
+                quoteCurrency: 'USD',
+                marginFormula: 'usd-quote' // usd-quote: (Lot * Contract * Entry) / Leverage
+            },
+            'XAGUSD': {
+                name: 'Silver vs US Dollar',
+                type: 'Metal',
+                defaultPrice: 29.500,
+                contractSize: 5000,
+                pipSize: 0.01,
+                digits: 3,
+                pipValueBase: 50.00,
+                quoteCurrency: 'USD',
+                marginFormula: 'usd-quote'
+            },
+            'EURUSD': {
+                name: 'Euro vs US Dollar',
+                type: 'Forex',
+                defaultPrice: 1.08500,
+                contractSize: 100000,
+                pipSize: 0.0001,
+                digits: 5,
+                pipValueBase: 10.00,
+                quoteCurrency: 'USD',
+                marginFormula: 'usd-quote'
+            },
+            'GBPUSD': {
+                name: 'Great Britain Pound vs US Dollar',
+                type: 'Forex',
+                defaultPrice: 1.27500,
+                contractSize: 100000,
+                pipSize: 0.0001,
+                digits: 5,
+                pipValueBase: 10.00,
+                quoteCurrency: 'USD',
+                marginFormula: 'usd-quote'
+            },
+            'AUDUSD': {
+                name: 'Australian Dollar vs US Dollar',
+                type: 'Forex',
+                defaultPrice: 0.66500,
+                contractSize: 100000,
+                pipSize: 0.0001,
+                digits: 5,
+                pipValueBase: 10.00,
+                quoteCurrency: 'USD',
+                marginFormula: 'usd-quote'
+            },
+            'NZDUSD': {
+                name: 'New Zealand Dollar vs US Dollar',
+                type: 'Forex',
+                defaultPrice: 0.61500,
+                contractSize: 100000,
+                pipSize: 0.0001,
+                digits: 5,
+                pipValueBase: 10.00,
+                quoteCurrency: 'USD',
+                marginFormula: 'usd-quote'
+            },
+            'USDCAD': {
+                name: 'US Dollar vs Canadian Dollar',
+                type: 'Forex',
+                defaultPrice: 1.36500,
+                contractSize: 100000,
+                pipSize: 0.0001,
+                digits: 5,
+                pipValueBase: 10.00, // 10 CAD
+                quoteCurrency: 'CAD',
+                marginFormula: 'usd-base' // usd-base: (Lot * Contract) / Leverage
+            },
+            'USDCHF': {
+                name: 'US Dollar vs Swiss Franc',
+                type: 'Forex',
+                defaultPrice: 0.89500,
+                contractSize: 100000,
+                pipSize: 0.0001,
+                digits: 5,
+                pipValueBase: 10.00, // 10 CHF
+                quoteCurrency: 'CHF',
+                marginFormula: 'usd-base'
+            },
+            'USDJPY': {
+                name: 'US Dollar vs Japanese Yen',
+                type: 'Forex',
+                defaultPrice: 157.500,
+                contractSize: 100000,
+                pipSize: 0.01,
+                digits: 3,
+                pipValueBase: 1000.00, // 1000 JPY
+                quoteCurrency: 'JPY',
+                marginFormula: 'usd-base'
+            },
+            'BTCUSD': {
+                name: 'Bitcoin vs US Dollar',
+                type: 'Crypto',
+                defaultPrice: 65000.00,
+                contractSize: 1,
+                pipSize: 1.0,
+                digits: 2,
+                pipValueBase: 1.00,
+                quoteCurrency: 'USD',
+                marginFormula: 'usd-quote'
+            },
+            'NDX100': {
+                name: 'Nasdaq 100',
+                type: 'Indices',
+                defaultPrice: 20000.00,
+                contractSize: 1,
+                pipSize: 1.0,
+                digits: 2,
+                pipValueBase: 1.00,
+                quoteCurrency: 'USD',
+                marginFormula: 'usd-quote'
+            },
+            'XTIUSD': {
+                name: 'WTI Crude Oil',
+                type: 'Commodity',
+                defaultPrice: 80.00,
+                contractSize: 100,
+                pipSize: 0.01,
+                digits: 2,
+                pipValueBase: 1.00,
+                quoteCurrency: 'USD',
+                marginFormula: 'usd-quote'
+            }
+        };
+
+        // State Variables
+        let activePair = 'XAUUSD';
+        let activeDirection = 'BUY'; // 'BUY' or 'SELL'
+        let isTpEnabled = true;
+
+        // Elements
+        const elements = {
+            balance: document.getElementById('balance'),
+            leverage: document.getElementById('leverage'),
+            leverageVal: document.getElementById('leverage-val'),
+
+            riskPct: document.getElementById('risk-pct'),
+            riskPctSlider: document.getElementById('risk-pct-slider'),
+            riskPctLabel: document.getElementById('risk-pct-label'),
+            riskUsd: document.getElementById('risk-usd'),
+
+            entryPrice: document.getElementById('entry-price'),
+            digitsInfo: document.getElementById('digits-info'),
+
+            slPrice: document.getElementById('sl-price'),
+            slPriceLabel: document.getElementById('sl-price-label'),
+            slPips: document.getElementById('sl-pips'),
+            slPipsLabel: document.getElementById('sl-pips-label'),
+
+            tpEnable: document.getElementById('tp-enable'),
+            tpPrice: document.getElementById('tp-price'),
+            tpPips: document.getElementById('tp-pips'),
+
+            // Outputs
+            calcLot: document.getElementById('calc-lot'),
+            lotDesc: document.getElementById('lot-desc'),
+            lotStandard: document.getElementById('lot-standard'),
+            lotMini: document.getElementById('lot-mini'),
+            lotMicro: document.getElementById('lot-micro'),
+
+            resRiskUsd: document.getElementById('res-risk-usd'),
+            resRiskPct: document.getElementById('res-risk-pct'),
+            resRewardUsd: document.getElementById('res-reward-usd'),
+            resRewardPct: document.getElementById('res-reward-pct'),
+            rewardCard: document.getElementById('reward-card'),
+
+            resRrRatio: document.getElementById('res-rr-ratio'),
+            rrBarRisk: document.getElementById('rr-bar-risk'),
+            rrBarReward: document.getElementById('rr-bar-reward'),
+
+            resMarginUsd: document.getElementById('res-margin-usd'),
+            resMarginLevel: document.getElementById('res-margin-level'),
+            resMaxLot: document.getElementById('res-max-lot'),
+            resFreeMargin: document.getElementById('res-free-margin'),
+            marginUsagePct: document.getElementById('margin-usage-pct'),
+            marginBarInner: document.getElementById('margin-bar-inner'),
+
+            warningBox: document.getElementById('warning-box'),
+            warningText: document.getElementById('warning-text'),
+
+            // Info card elements
+            infoPairCode: document.getElementById('info-pair-code'),
+            infoContractSize: document.getElementById('info-contract-size'),
+            infoPipDef: document.getElementById('info-pip-def'),
+            infoPipVal: document.getElementById('info-pip-val'),
+            infoMarginFormula: document.getElementById('info-margin-formula'),
+
+            // Theme/Lot Card styling wrapper
+            lotCard: document.getElementById('lot-card')
+        };
+
+        // Initialize lucide icons
+        lucide.createIcons();
+
+        // Helper functions for digits formatting
+        function formatMoney(amount, currency = '$') {
+            return currency + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatNumber(num, decimals) {
+            return Number(num).toFixed(decimals);
+        }
+
+        // Update leverage helper text
+        function updateLeverageText() {
+            elements.leverageVal.textContent = '1:' + elements.leverage.value;
+        }
+
+        // Select Pair Action
+        function selectPair(symbol) {
+            // Remove active class from old card
+            document.getElementById(`pair-${activePair}`).classList.remove('active');
+
+            // Add active class to new card
+            activePair = symbol;
+            const newActiveCard = document.getElementById(`pair-${activePair}`);
+            newActiveCard.classList.add('active');
+
+            const config = PAIR_CONFIGS[activePair];
+
+            // Update header info text
+            document.getElementById('selected-pair-desc').textContent = `${symbol} - ${config.name}`;
+
+            // Update lot card visual theme (gold accent / silver accent / blue accent)
+            elements.lotCard.className = 'glass-card lot-display-card';
+            if (symbol === 'XAUUSD') {
+                elements.lotCard.classList.add('gold-active');
+            } else if (symbol === 'XAGUSD') {
+                elements.lotCard.classList.add('silver-active');
+            }
+
+            // Set inputs default values for this pair
+            elements.entryPrice.value = config.defaultPrice;
+            elements.digitsInfo.textContent = `${config.digits} desimal`;
+
+            // Adjust step attribute of entry price input based on digits
+            elements.entryPrice.step = (1 / Math.pow(10, config.digits)).toFixed(config.digits);
+            elements.slPrice.step = elements.entryPrice.step;
+            elements.tpPrice.step = elements.entryPrice.step;
+
+            // Reset default SL / TP Pips
+            if (symbol === 'XAUUSD') {
+                elements.slPips.value = 100; // 10 USD
+                elements.tpPips.value = 300; // 30 USD
+            } else if (symbol === 'XAGUSD') {
+                elements.slPips.value = 50;  // 0.5 USD
+                elements.tpPips.value = 150; // 1.5 USD
+            } else if (symbol === 'USDJPY') {
+                elements.slPips.value = 50;  // 0.5 JPY
+                elements.tpPips.value = 150; // 1.5 JPY
+            } else {
+                elements.slPips.value = 50;  // 50 pips (0.0050)
+                elements.tpPips.value = 150; // 150 pips (0.0150)
+            }
+
+            // Update pip labels
+            updatePipLabels();
+
+            // Calculate prices based on default pips
+            updateSlPriceFromPips();
+            updateTpPriceFromPips();
+
+            // Update Info card
+            updateInfoCard();
+
+            // Trigger calculation
+            calculate();
+        }
+
+        function updatePipLabels() {
+            const config = PAIR_CONFIGS[activePair];
+            elements.slPipsLabel.textContent = `1 pip = ${config.pipSize} ${config.quoteCurrency}`;
+        }
+
+        function updateInfoCard() {
+            const config = PAIR_CONFIGS[activePair];
+            elements.infoPairCode.textContent = activePair;
+
+            let unit = 'Units';
+            if (activePair === 'XAUUSD') unit = 'Ounces';
+            else if (activePair === 'XAGUSD') unit = 'Ounces';
+
+            elements.infoContractSize.textContent = `${config.contractSize.toLocaleString()} ${unit}`;
+            elements.infoPipDef.textContent = `${config.pipSize} ${config.quoteCurrency}`;
+
+            // Pip Value at 1.0 Lot in USD
+            let pipValUsd = config.pipValueBase;
+            if (config.marginFormula === 'usd-base') {
+                // USDCAD, USDCHF, USDJPY: Base is USD, quote is XXX. Pip value in USD = 10 / exchange_rate
+                const rate = parseFloat(elements.entryPrice.value) || config.defaultPrice;
+                pipValUsd = config.pipValueBase / rate;
+            }
+            elements.infoPipVal.textContent = `$${pipValUsd.toFixed(2)} USD`;
+
+            if (config.marginFormula === 'usd-quote') {
+                elements.infoMarginFormula.textContent = '(Lot * Contract Size * Entry) / Leverage';
+            } else {
+                elements.infoMarginFormula.textContent = '(Lot * Contract Size) / Leverage';
+            }
+        }
+
+        // Direction Switch
+        function setDirection(dir) {
+            activeDirection = dir;
+
+            // Update active class on buttons
+            if (dir === 'BUY') {
+                document.getElementById('dir-buy').classList.add('active');
+                document.getElementById('dir-sell').classList.remove('active');
+                elements.slPriceLabel.textContent = 'Di bawah entry';
+                elements.slPriceLabel.className = 'label-extra text-danger';
+            } else {
+                document.getElementById('dir-buy').classList.remove('active');
+                document.getElementById('dir-sell').classList.add('active');
+                elements.slPriceLabel.textContent = 'Di atas entry';
+                elements.slPriceLabel.className = 'label-extra text-danger';
+            }
+
+            // Recompute prices based on existing pips
+            updateSlPriceFromPips();
+            updateTpPriceFromPips();
+            calculate();
+        }
+
+        // Toggle Take Profit Input
+        function toggleTpEnable() {
+            isTpEnabled = elements.tpEnable.checked;
+            if (isTpEnabled) {
+                elements.tpPrice.classList.remove('disabled-input');
+                elements.tpPips.classList.remove('disabled-input');
+                elements.rewardCard.classList.remove('disabled-input');
+            } else {
+                elements.tpPrice.classList.add('disabled-input');
+                elements.tpPips.classList.add('disabled-input');
+                elements.rewardCard.classList.add('disabled-input');
+            }
+            calculate();
+        }
+
+        // Synchronize Risk Percent Slider with number input
+        function syncSliderToRiskPct() {
+            elements.riskPct.value = elements.riskPctSlider.value;
+            elements.riskPctLabel.textContent = parseFloat(elements.riskPct.value).toFixed(1) + '%';
+
+            const balance = parseFloat(elements.balance.value) || 0;
+            const pct = parseFloat(elements.riskPct.value) || 0;
+            elements.riskUsd.value = formatNumber((balance * pct) / 100, 2);
+
+            calculate();
+        }
+
+        // Risk Sync
+        function syncRiskPctToUsd() {
+            let val = parseFloat(elements.riskPct.value) || 0;
+            if (val > 100) { val = 100; elements.riskPct.value = 100; }
+            if (val < 0) { val = 0; elements.riskPct.value = 0; }
+
+            elements.riskPctSlider.value = val;
+            elements.riskPctLabel.textContent = val.toFixed(1) + '%';
+
+            const balance = parseFloat(elements.balance.value) || 0;
+            elements.riskUsd.value = formatNumber((balance * val) / 100, 2);
+
+            calculate();
+        }
+
+        function syncRiskUsdToPct() {
+            const balance = parseFloat(elements.balance.value) || 0;
+            let riskUsd = parseFloat(elements.riskUsd.value) || 0;
+
+            if (riskUsd > balance) {
+                riskUsd = balance;
+                elements.riskUsd.value = balance.toFixed(2);
+            }
+            if (riskUsd < 0) {
+                riskUsd = 0;
+                elements.riskUsd.value = 0.00;
+            }
+
+            const pct = balance > 0 ? (riskUsd / balance) * 100 : 0;
+            elements.riskPct.value = formatNumber(pct, 2);
+            elements.riskPctSlider.value = pct;
+            elements.riskPctLabel.textContent = pct.toFixed(1) + '%';
+
+            calculate();
+        }
+
+        function setRiskPct(pct) {
+            elements.riskPct.value = pct;
+            elements.riskPctSlider.value = pct;
+            elements.riskPctLabel.textContent = pct.toFixed(1) + '%';
+
+            const balance = parseFloat(elements.balance.value) || 0;
+            elements.riskUsd.value = formatNumber((balance * pct) / 100, 2);
+
+            calculate();
+        }
+
+        // Price/Pips Synchronizations
+        function updateSlPriceFromPips() {
+            const config = PAIR_CONFIGS[activePair];
+            const entry = parseFloat(elements.entryPrice.value) || 0;
+            const pips = parseFloat(elements.slPips.value) || 0;
+
+            const diff = pips * config.pipSize;
+            let slPrice = 0;
+            if (activeDirection === 'BUY') {
+                slPrice = entry - diff;
+            } else {
+                slPrice = entry + diff;
+            }
+
+            elements.slPrice.value = formatNumber(Math.max(0, slPrice), config.digits);
+        }
+
+        function updateSlPipsFromPrice() {
+            const config = PAIR_CONFIGS[activePair];
+            const entry = parseFloat(elements.entryPrice.value) || 0;
+            const slPrice = parseFloat(elements.slPrice.value) || 0;
+
+            const diff = Math.abs(entry - slPrice);
+            const pips = diff / config.pipSize;
+            elements.slPips.value = formatNumber(pips, 1);
+        }
+
+        function updateTpPriceFromPips() {
+            const config = PAIR_CONFIGS[activePair];
+            const entry = parseFloat(elements.entryPrice.value) || 0;
+            const pips = parseFloat(elements.tpPips.value) || 0;
+
+            const diff = pips * config.pipSize;
+            let tpPrice = 0;
+            if (activeDirection === 'BUY') {
+                tpPrice = entry + diff;
+            } else {
+                tpPrice = entry - diff;
+            }
+
+            elements.tpPrice.value = formatNumber(Math.max(0, tpPrice), config.digits);
+        }
+
+        function updateTpPipsFromPrice() {
+            const config = PAIR_CONFIGS[activePair];
+            const entry = parseFloat(elements.entryPrice.value) || 0;
+            const tpPrice = parseFloat(elements.tpPrice.value) || 0;
+
+            const diff = Math.abs(entry - tpPrice);
+            const pips = diff / config.pipSize;
+            elements.tpPips.value = formatNumber(pips, 1);
+        }
+
+        // Input handlers
+        function entryPriceChanged() {
+            updateSlPriceFromPips();
+            updateTpPriceFromPips();
+            updateInfoCard();
+            calculate();
+        }
+
+        function slPriceChanged() {
+            elements.slPips.classList.add('sync-active');
+            setTimeout(() => elements.slPips.classList.remove('sync-active'), 500);
+
+            updateSlPipsFromPrice();
+            calculate();
+        }
+
+        // Price change updates
+        function slPipsChanged() {
+            elements.slPrice.classList.add('sync-active');
+            setTimeout(() => elements.slPrice.classList.remove('sync-active'), 500);
+
+            updateSlPriceFromPips();
+            calculate();
+        }
+
+        function tpPriceChanged() {
+            elements.tpPips.classList.add('sync-active');
+            setTimeout(() => elements.tpPips.classList.remove('sync-active'), 500);
+
+            updateTpPipsFromPrice();
+            calculate();
+        }
+
+        function tpPipsChanged() {
+            elements.tpPrice.classList.add('sync-active');
+            setTimeout(() => elements.tpPrice.classList.remove('sync-active'), 500);
+
+            updateTpPriceFromPips();
+            calculate();
+        }
+
+        // CORE CALCULATION ENGINE
+        function calculate() {
+            const config = PAIR_CONFIGS[activePair];
+            const balance = parseFloat(elements.balance.value) || 0;
+            const leverage = parseInt(elements.leverage.value) || 1;
+            const riskUsd = parseFloat(elements.riskUsd.value) || 0;
+
+            const entry = parseFloat(elements.entryPrice.value) || 0;
+            const slPrice = parseFloat(elements.slPrice.value) || 0;
+            const tpPrice = parseFloat(elements.tpPrice.value) || 0;
+
+            // Reset display state if values are invalid
+            if (balance <= 0 || riskUsd <= 0 || entry <= 0 || slPrice <= 0 || entry === slPrice) {
+                elements.calcLot.textContent = '0.00';
+                elements.lotStandard.textContent = '0.00';
+                elements.lotMini.textContent = '0.0';
+                elements.lotMicro.textContent = '0.0';
+                elements.resRiskUsd.textContent = '-$0.00';
+                elements.resRiskPct.textContent = '0.00%';
+
+                elements.resRewardUsd.textContent = '+$0.00';
+                elements.resRewardPct.textContent = '0.00%';
+                elements.resRrRatio.textContent = 'N/A';
+
+                elements.resMarginUsd.textContent = '$0.00';
+                elements.resMarginLevel.textContent = 'Usage: 0.00%';
+                elements.marginUsagePct.textContent = '0.00%';
+                elements.marginBarInner.style.width = '0%';
+
+                elements.resMaxLot.textContent = '0.00';
+                elements.resFreeMargin.textContent = 'Saldo Kosong';
+
+                if (entry === slPrice && entry > 0) {
+                    showWarning('Stop Loss tidak boleh sama dengan Entry Price.');
+                } else {
+                    hideWarning();
+                }
+                return;
+            }
+
+            // 1. Calculate SL difference in Price
+            const diffSL = Math.abs(entry - slPrice);
+
+            // Validation for SL direction
+            if (activeDirection === 'BUY' && slPrice >= entry) {
+                showWarning('Untuk posisi BUY, Stop Loss harus DI BAWAH Entry Price.');
+                elements.calcLot.textContent = '0.00';
+                return;
+            }
+            if (activeDirection === 'SELL' && slPrice <= entry) {
+                showWarning('Untuk posisi SELL, Stop Loss harus DI ATAS Entry Price.');
+                elements.calcLot.textContent = '0.00';
+                return;
+            }
+            hideWarning();
+
+            // 2. Calculate LOT SIZE based on risk and SL price difference
+            let lot = 0;
+            if (config.marginFormula === 'usd-quote') {
+                lot = riskUsd / (config.contractSize * diffSL);
+            } else {
+                lot = (riskUsd * entry) / (config.contractSize * diffSL);
+            }
+
+            // Floor to 2 decimal places (standard MetaTrader limit)
+            lot = Math.max(0.01, Math.floor(lot * 100) / 100);
+
+            // Check if calculated lot is valid number
+            if (isNaN(lot) || !isFinite(lot)) {
+                lot = 0;
+            }
+
+            // 3. Display Lot recommendation details
+            elements.calcLot.textContent = lot.toFixed(2);
+
+            // Define lot description text
+            if (lot >= 1.0) {
+                elements.lotDesc.textContent = 'Standard Lot';
+            } else if (lot >= 0.1) {
+                elements.lotDesc.textContent = 'Mini Lot';
+            } else {
+                elements.lotDesc.textContent = 'Micro Lot';
+            }
+
+            elements.lotStandard.textContent = lot.toFixed(2);
+            elements.lotMini.textContent = (lot * 10).toFixed(1);
+            elements.lotMicro.textContent = (lot * 100).toFixed(0);
+
+            // 4. Calculate actual risk (due to rounding of lot size to 2 decimals)
+            let actualRiskUsd = 0;
+            if (config.marginFormula === 'usd-quote') {
+                actualRiskUsd = lot * config.contractSize * diffSL;
+            } else {
+                actualRiskUsd = (lot * config.contractSize * diffSL) / entry;
+            }
+
+            elements.resRiskUsd.textContent = `-${formatMoney(actualRiskUsd)}`;
+            const actualRiskPct = (actualRiskUsd / balance) * 100;
+            elements.resRiskPct.textContent = `${actualRiskPct.toFixed(2)}% dari balance`;
+
+            // 5. Take Profit (Reward) calculations
+            let actualRewardUsd = 0;
+            let rewardPct = 0;
+            let rrRatio = 0;
+
+            if (isTpEnabled) {
+                const diffTP = Math.abs(tpPrice - entry);
+
+                // Validate TP Direction
+                let isTpValid = true;
+                if (activeDirection === 'BUY' && tpPrice <= entry) {
+                    isTpValid = false;
+                } else if (activeDirection === 'SELL' && tpPrice >= entry) {
+                    isTpValid = false;
+                }
+
+                if (isTpValid) {
+                    if (config.marginFormula === 'usd-quote') {
+                        actualRewardUsd = lot * config.contractSize * diffTP;
+                    } else {
+                        actualRewardUsd = (lot * config.contractSize * diffTP) / entry;
+                    }
+                    rewardPct = (actualRewardUsd / balance) * 100;
+
+                    elements.resRewardUsd.textContent = `+${formatMoney(actualRewardUsd)}`;
+                    elements.resRewardPct.textContent = `${rewardPct.toFixed(2)}% dari balance`;
+
+                    // R:R Ratio
+                    rrRatio = actualRiskUsd > 0 ? (actualRewardUsd / actualRiskUsd) : 0;
+                    elements.resRrRatio.textContent = `1 : ${rrRatio.toFixed(2)}`;
+
+                    // Update visual RR Bar
+                    const totalBar = 1 + rrRatio;
+                    const riskPctBar = (1 / totalBar) * 100;
+                    const rewardPctBar = (rrRatio / totalBar) * 100;
+                    elements.rrBarRisk.style.width = `${riskPctBar}%`;
+                    elements.rrBarReward.style.width = `${rewardPctBar}%`;
+                } else {
+                    elements.resRewardUsd.textContent = 'Invalid TP';
+                    elements.resRewardPct.textContent = 'Check TP Price direction';
+                    elements.resRrRatio.textContent = 'N/A';
+                    elements.rrBarRisk.style.width = '100%';
+                    elements.rrBarReward.style.width = '0%';
+                }
+            } else {
+                elements.resRewardUsd.textContent = 'N/A';
+                elements.resRewardPct.textContent = 'Take Profit dinonaktifkan';
+                elements.resRrRatio.textContent = 'N/A';
+                elements.rrBarRisk.style.width = '100%';
+                elements.rrBarReward.style.width = '0%';
+            }
+
+            // 6. Margin Calculations
+            let requiredMarginUsd = 0;
+            if (config.marginFormula === 'usd-quote') {
+                requiredMarginUsd = (config.contractSize * lot * entry) / leverage;
+            } else {
+                requiredMarginUsd = (config.contractSize * lot * 1.0) / leverage;
+            }
+
+            elements.resMarginUsd.textContent = formatMoney(requiredMarginUsd);
+            const marginUsage = balance > 0 ? (requiredMarginUsd / balance) * 100 : 0;
+            elements.resMarginLevel.textContent = `Usage: ${marginUsage.toFixed(2)}%`;
+            elements.marginUsagePct.textContent = `${marginUsage.toFixed(2)}%`;
+
+            elements.marginBarInner.style.width = `${Math.min(100, marginUsage)}%`;
+            if (marginUsage > 80) {
+                elements.marginBarInner.style.backgroundColor = 'var(--color-danger)';
+            } else if (marginUsage > 50) {
+                elements.marginBarInner.style.backgroundColor = 'var(--color-warning)';
+            } else {
+                elements.marginBarInner.style.backgroundColor = 'var(--color-primary)';
+            }
+
+            // 7. Max Lot calculation based on balance and leverage
+            let maxLot = 0;
+            if (config.marginFormula === 'usd-quote') {
+                maxLot = (balance * leverage) / (config.contractSize * entry);
+            } else {
+                maxLot = (balance * leverage) / (config.contractSize * 1.0);
+            }
+            maxLot = Math.floor(maxLot * 100) / 100;
+            elements.resMaxLot.textContent = maxLot.toFixed(2);
+
+            const freeMargin = balance - requiredMarginUsd;
+            elements.resFreeMargin.textContent = `Sisa Margin: ${formatMoney(freeMargin)}`;
+
+            // 8. Warning system
+            if (requiredMarginUsd > balance) {
+                showWarning(`Saldo tidak mencukupi! Margin dibutuhkan ${formatMoney(requiredMarginUsd)} melebihi saldo ${formatMoney(balance)}. Kurangi lot atau tambah leverage.`);
+            } else if (actualRiskUsd > balance) {
+                showWarning(`Risiko melebihi saldo akun Anda! Harap kecilkan persentase risiko.`);
+            } else if (marginUsage > 50) {
+                showWarning(`Peringatan: Margin terpakai (${marginUsage.toFixed(1)}%) cukup tinggi. Harap berhati-hati dengan margin call.`, 'warning');
+            }
+
+            saveCalculatorState();
+        }
+
+        function showWarning(text, type = 'danger') {
+            elements.warningBox.classList.add('show');
+            elements.warningText.textContent = text;
+            if (type === 'warning') {
+                elements.warningBox.style.background = 'rgba(245, 158, 11, 0.08)';
+                elements.warningBox.style.borderColor = 'rgba(245, 158, 11, 0.25)';
+                elements.warningBox.style.color = '#fde68a';
+            } else {
+                elements.warningBox.style.background = 'rgba(239, 68, 68, 0.08)';
+                elements.warningBox.style.borderColor = 'rgba(239, 68, 68, 0.25)';
+                elements.warningBox.style.color = '#fca5a5';
+            }
+        }
+
+        function hideWarning() {
+            elements.warningBox.classList.remove('show');
+        }
+
+        async function saveCalculatorState() {
+            const state = {
+                balance: elements.balance.value,
+                leverage: elements.leverage.value,
+                activePair: activePair,
+                activeDirection: activeDirection,
+                riskPct: elements.riskPct.value,
+                entryPrice: elements.entryPrice.value,
+                slPrice: elements.slPrice.value,
+                tpPrice: elements.tpPrice.value,
+                tpEnable: elements.tpEnable.checked
+            };
+            if (currentUser) {
+                try {
+                    await db.collection('users').doc(currentUser.uid).collection('settings').doc('calculator').set(state);
+                } catch(e) { console.error("Error saving calc state:", e); }
+            }
+        }
+
+        async function loadCalculatorState() {
+            if (currentUser) {
+                try {
+                    const doc = await db.collection('users').doc(currentUser.uid).collection('settings').doc('calculator').get();
+                    if (doc.exists) {
+                        const state = doc.data();
+                        if (state.balance) elements.balance.value = state.balance;
+                        if (state.leverage) {
+                            elements.leverage.value = state.leverage;
+                            updateLeverageText();
+                        }
+                        if (state.activePair) selectPair(state.activePair);
+                        if (state.activeDirection) setDirection(state.activeDirection);
+                        if (state.riskPct) {
+                            elements.riskPct.value = state.riskPct;
+                            syncRiskPctToUsd(); // also updates slider
+                        }
+                        if (state.entryPrice) elements.entryPrice.value = state.entryPrice;
+                        if (state.slPrice) elements.slPrice.value = state.slPrice;
+                        if (state.tpPrice) elements.tpPrice.value = state.tpPrice;
+                        if (state.tpEnable !== undefined) {
+                            elements.tpEnable.checked = state.tpEnable;
+                            toggleTpEnable();
+                        }
+                    } else {
+                        updateLeverageText();
+                        syncRiskPctToUsd();
+                        selectPair('XAUUSD');
+                    }
+                } catch(e) { console.error(e); }
+            }
+        }
+
+        // Set default elements state on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            // Data will be loaded when auth state changes to logged in
+        });
+
+        // Tab Switching Logic
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            document.getElementById(`tab-btn-${tabName}`).classList.add('active');
+        }
+
+        // Trading Journal Logic
+        let journalData = [];
+        let unsubscribeJournal = null;
+
+        async function saveToJournal() {
+            // Validate inputs first
+            const entry = parseFloat(elements.entryPrice.value) || 0;
+            const slPrice = parseFloat(elements.slPrice.value) || 0;
+            const tpPrice = parseFloat(elements.tpPrice.value) || 0;
+            const lotStr = elements.calcLot.textContent;
+            
+            if (entry <= 0 || slPrice <= 0 || lotStr === '0.00' || lotStr === '0') {
+                alert('Parameter trading belum valid atau Lot tidak bisa dihitung. Silakan periksa pengaturan Anda.');
+                return;
+            }
+
+            // Capture RR and percentages
+            let rrText = elements.resRrRatio.textContent; // e.g. "1 : 3.00"
+            let riskPctVal = parseFloat(elements.resRiskPct.textContent) || 0; // "1.00% dari balance" -> 1.00
+            let rewardPctVal = parseFloat(elements.resRewardPct.textContent) || 0;
+
+            const customDateInput = document.getElementById('backtest-date').value;
+            let tradeTimestamp = Date.now();
+            let tradeDateStr = new Date().toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            
+            if (customDateInput) {
+                const d = new Date(customDateInput);
+                tradeTimestamp = d.getTime();
+                tradeDateStr = d.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            }
+
+            const tradeId = Date.now().toString();
+            const trade = {
+                timestamp: tradeTimestamp,
+                date: tradeDateStr,
+                pair: activePair,
+                direction: activeDirection,
+                entry: entry.toFixed(PAIR_CONFIGS[activePair].digits),
+                sl: slPrice.toFixed(PAIR_CONFIGS[activePair].digits),
+                tp: isTpEnabled ? tpPrice.toFixed(PAIR_CONFIGS[activePair].digits) : 'None',
+                lot: lotStr,
+                risk: elements.resRiskUsd.textContent,
+                reward: isTpEnabled ? elements.resRewardUsd.textContent : 'N/A',
+                rr: isTpEnabled ? rrText : 'N/A',
+                riskPct: riskPctVal,
+                rewardPct: isTpEnabled ? rewardPctVal : 0,
+                reason: '',
+                linkReason: '',
+                linkHasil: '',
+                closePrice: '',
+                status: 'pending' // pending, win, lose, bep
+            };
+
+            if (currentUser) {
+                try {
+                    await db.collection('users').doc(currentUser.uid).collection('journals').doc(tradeId).set(trade);
+                    alert('Trade berhasil disimpan ke Jurnal Online!');
+                } catch(e) {
+                    alert('Gagal menyimpan: ' + e.message);
+                }
+            }
+        }
+
+        function loadJournal() {
+            if (currentUser) {
+                if (unsubscribeJournal) unsubscribeJournal();
+                
+                unsubscribeJournal = db.collection('users').doc(currentUser.uid).collection('journals')
+                    .orderBy('timestamp', 'asc')
+                    .onSnapshot((snapshot) => {
+                        journalData = [];
+                        snapshot.forEach((doc) => {
+                            journalData.push({ id: doc.id, ...doc.data() });
+                        });
+                        renderJournal();
+                    });
+            }
+        }
+
+        async function updateTradeStatus(id, newStatus) {
+            if (currentUser) {
+                await db.collection('users').doc(currentUser.uid).collection('journals').doc(id).update({ status: newStatus });
+            }
+        }
+
+        async function deleteTrade(id) {
+            if(confirm('Apakah Anda yakin ingin menghapus data trade ini?')) {
+                if (currentUser) {
+                    await db.collection('users').doc(currentUser.uid).collection('journals').doc(id).delete();
+                }
+            }
+        }
+
+        async function splitTrade(id) {
+            const tradeToSplit = journalData.find(t => t.id === id);
+            if (!tradeToSplit) return;
+            
+            const splitPctStr = prompt("Masukkan persentase lot yang ingin di-split (contoh: 50 untuk membagi 50% lot):", "50");
+            if (!splitPctStr) return;
+            const splitPct = parseFloat(splitPctStr);
+            if (isNaN(splitPct) || splitPct <= 0 || splitPct >= 100) {
+                alert("Persentase split harus antara 1 - 99.");
+                return;
+            }
+
+            const currentLot = parseFloat(tradeToSplit.lot);
+            const currentRisk = parseFloat(String(tradeToSplit.risk).replace(/[^0-9.-]+/g,"")) || 0;
+            const currentReward = parseFloat(String(tradeToSplit.reward).replace(/[^0-9.-]+/g,"")) || 0;
+            const currentRiskPct = parseFloat(tradeToSplit.riskPct) || 0;
+            const currentRewardPct = parseFloat(tradeToSplit.rewardPct) || 0;
+
+            const fraction = splitPct / 100.0;
+            const splitLot = currentLot * fraction;
+            const remainingLot = currentLot - splitLot;
+
+            if(splitLot <= 0 || remainingLot <= 0) {
+                alert("Lot terlalu kecil untuk di-split.");
+                return;
+            }
+
+            const formatMoney = val => "$" + val.toFixed(2);
+            
+            // Remaining trade (Update existing)
+            const remainingRisk = currentRisk * (1 - fraction);
+            const remainingReward = currentReward * (1 - fraction);
+            const remainingRiskPctVal = currentRiskPct * (1 - fraction);
+            const remainingRewardPctVal = currentRewardPct * (1 - fraction);
+
+            // Split trade (New trade)
+            const splitRisk = currentRisk * fraction;
+            const splitReward = currentReward * fraction;
+            const splitRiskPctVal = currentRiskPct * fraction;
+            const splitRewardPctVal = currentRewardPct * fraction;
+
+            if(currentUser) {
+                try {
+                    const batch = db.batch();
+                    const journalsRef = db.collection('users').doc(currentUser.uid).collection('journals');
+                    
+                    // Update original
+                    batch.update(journalsRef.doc(id), {
+                        lot: remainingLot.toFixed(2),
+                        risk: formatMoney(remainingRisk),
+                        reward: tradeToSplit.reward !== 'N/A' ? formatMoney(remainingReward) : 'N/A',
+                        riskPct: remainingRiskPctVal,
+                        rewardPct: remainingRewardPctVal
+                    });
+
+                    // Create new
+                    const newTradeId = Date.now().toString();
+                    const newTrade = { ...tradeToSplit };
+                    delete newTrade.id;
+                    newTrade.lot = splitLot.toFixed(2);
+                    newTrade.risk = formatMoney(splitRisk);
+                    newTrade.reward = tradeToSplit.reward !== 'N/A' ? formatMoney(splitReward) : 'N/A';
+                    newTrade.riskPct = splitRiskPctVal;
+                    newTrade.rewardPct = splitRewardPctVal;
+                    
+                    batch.set(journalsRef.doc(newTradeId), newTrade);
+
+                    await batch.commit();
+                    alert("Trade berhasil di-split!");
+                } catch(e) {
+                    alert('Gagal split trade: ' + e.message);
+                }
+            }
+        }
+
+        let updateReasonTimeout;
+        async function updateTradeReason(id, text) {
+            if (currentUser) {
+                clearTimeout(updateReasonTimeout);
+                updateReasonTimeout = setTimeout(async () => {
+                    await db.collection('users').doc(currentUser.uid).collection('journals').doc(id).update({ reason: text });
+                }, 500);
+            }
+        }
+
+        async function updateTradeClosePrice(id, val) {
+            if (currentUser) {
+                try {
+                    await db.collection('users').doc(currentUser.uid).collection('journals').doc(id).update({ closePrice: val });
+                } catch (e) {
+                    alert("Gagal update close price: " + e.message);
+                }
+            }
+        }
+
+        async function editLink(id, type, currentUrl) {
+            const newUrl = prompt("Masukkan Link TradingView:", currentUrl);
+            if (newUrl !== null) {
+                if (currentUser) {
+                    try {
+                        await db.collection('users').doc(currentUser.uid).collection('journals').doc(id).update({
+                            [type]: newUrl
+                        });
+                    } catch (e) {
+                        alert("Gagal menyimpan link: " + e.message);
+                    }
+                }
+            }
+        }
+
+        function generateLinkHTML(type, id, url) {
+            if (url && url.trim() !== '') {
+                return `
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <a href="${url}" target="_blank" title="Buka Link" style="color:var(--color-primary);"><i data-lucide="external-link" style="width:16px; height:16px;"></i></a>
+                        <button class="btn-delete" style="background:none; border:none; padding:0; color:var(--text-muted); cursor:pointer;" onclick="editLink('${id}', '${type}', '${url}')" title="Edit Link"><i data-lucide="edit-2" style="width:14px; height:14px;"></i></button>
+                    </div>
+                `;
+            } else {
+                return `
+                    <button onclick="editLink('${id}', '${type}', '')" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#fff; border-radius:4px; font-size:0.75rem; padding:4px 8px; cursor:pointer;" title="Tambah Link">+ Link</button>
+                `;
+            }
+        }
+
+        function renderJournal() {
+            const tbody = document.getElementById('journal-tbody');
+            const emptyMsg = document.getElementById('empty-journal-msg');
+            
+            tbody.innerHTML = '';
+            
+            let winCount = 0;
+            let loseCount = 0;
+            let bepCount = 0;
+            let netPnl = 0; // Percent
+
+            if (journalData.length === 0) {
+                emptyMsg.style.display = 'block';
+                document.querySelector('.journal-table').style.display = 'none';
+            } else {
+                emptyMsg.style.display = 'none';
+                document.querySelector('.journal-table').style.display = 'table';
+
+                // Reverse loop so newest is on top
+                for (let i = journalData.length - 1; i >= 0; i--) {
+                    const t = journalData[i];
+                    
+                    // Default values for backward compatibility with old saves
+                    let rPct = t.rewardPct || 0;
+                    let rskPct = t.riskPct || 0;
+                    
+                    if(t.status === 'win') {
+                        winCount++;
+                        netPnl += rPct;
+                    }
+                    if(t.status === 'lose') {
+                        loseCount++;
+                        netPnl -= rskPct;
+                    }
+                    if(t.status === 'bep') {
+                        bepCount++;
+                    }
+
+                    const tr = document.createElement('tr');
+                    
+                    // Status Dropdown
+                    const selectHTML = `
+                        <select class="status-select ${t.status}" onchange="updateTradeStatus('${t.id}', this.value)">
+                            <option value="pending" ${t.status === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="win" ${t.status === 'win' ? 'selected' : ''}>Win</option>
+                            <option value="lose" ${t.status === 'lose' ? 'selected' : ''}>Lose</option>
+                            <option value="bep" ${t.status === 'bep' ? 'selected' : ''}>BEP</option>
+                        </select>
+                    `;
+
+                    // Generate Link UI
+                    const reasonHTML = generateLinkHTML('linkReason', t.id, t.linkReason);
+                    const hasilHTML = generateLinkHTML('linkHasil', t.id, t.linkHasil);
+
+                    tr.innerHTML = `
+                        <td>${t.date}</td>
+                        <td style="font-weight:600; color:var(--text-main);">${t.pair}</td>
+                        <td><span style="color: ${t.direction === 'BUY' ? 'var(--color-success)' : 'var(--color-danger)'}; font-weight: 600;">${t.direction}</span></td>
+                        <td>${t.entry}</td>
+                        <td style="color: var(--color-danger);">${t.sl}</td>
+                        <td style="color: var(--color-success);">${t.tp}</td>
+                        <td><input type="number" class="close-price-input" placeholder="Close" value="${t.closePrice || ''}" onchange="updateTradeClosePrice('${t.id}', this.value)" style="width: 70px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); color: #fff; padding: 4px; border-radius: 4px;" /></td>
+                        <td style="font-weight:bold;">${t.lot}</td>
+                        <td style="font-weight:600; color:#fff;">${t.rr || 'N/A'}</td>
+                        <td><span style="color:var(--color-danger);">${t.risk}</span> / <span style="color:var(--color-success);">${t.reward}</span></td>
+                        <td><textarea class="reason-input" placeholder="Alasan..." onchange="updateTradeReason('${t.id}', this.value)">${t.reason || ''}</textarea></td>
+                        <td>${reasonHTML}</td>
+                        <td>${hasilHTML}</td>
+                        <td>${selectHTML}</td>
+                        <td>
+                            <button class="btn-delete" style="background-color: var(--color-primary); margin-bottom: 4px;" onclick="splitTrade('${t.id}')" title="Split Trade"><i data-lucide="scissors" style="width:14px; height:14px;"></i></button>
+                            <button class="btn-delete" onclick="deleteTrade('${t.id}')" title="Hapus Trade"><i data-lucide="trash-2" style="width:14px; height:14px;"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            }
+
+            // Update Stats Display
+            const totalClosed = winCount + loseCount + bepCount;
+            const winRate = totalClosed > 0 ? ((winCount / totalClosed) * 100).toFixed(1) : 0;
+            
+            document.getElementById('stat-total').textContent = journalData.length;
+            document.getElementById('stat-winrate').textContent = `${winRate}%`;
+            
+            const pnlEl = document.getElementById('stat-pnl');
+            pnlEl.textContent = `${netPnl > 0 ? '+' : ''}${netPnl.toFixed(2)}%`;
+            if (netPnl > 0) {
+                pnlEl.style.color = 'var(--color-success)';
+                pnlEl.parentElement.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+            } else if (netPnl < 0) {
+                pnlEl.style.color = 'var(--color-danger)';
+                pnlEl.parentElement.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+            } else {
+                pnlEl.style.color = 'var(--color-silver)';
+                pnlEl.parentElement.style.borderColor = 'var(--border-color)';
+            }
+
+            document.getElementById('stat-wlb').textContent = `${winCount} / ${loseCount} / ${bepCount}`;
+            
+            // Re-init lucide icons for new elements
+            lucide.createIcons();
+        }
+    </script>
+
+    <!-- Image Modal for Fullscreen viewing -->
+    <div class="modal-overlay" id="image-modal">
+        <button class="modal-close" onclick="closeModalImg()"><i data-lucide="x"></i></button>
+        <img src="" id="modal-img-content" class="modal-img">
+    </div>
+
+    <!-- Service Worker Registration for PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+    </script>
+</body>
+
+</html>
