@@ -2697,13 +2697,68 @@
             }
         }
 
-        async function updateTradeClosePrice(id, val) {
-            if (currentUser) {
-                try {
-                    await db.collection('users').doc(currentUser.uid).collection('journals').doc(id).update({ closePrice: val });
-                } catch (e) {
-                    alert("Gagal update close price: " + e.message);
+        async function updateTradeParam(id, field, val) {
+            if (!currentUser) return;
+            try {
+                const tradeRef = db.collection('users').doc(currentUser.uid).collection('journals').doc(id);
+                const doc = await tradeRef.get();
+                if (doc.exists) {
+                    let t = doc.data();
+                    t[field] = val;
+                    
+                    // Recalculate Risk/Reward based on new SL/TP
+                    if (field === 'sl' || field === 'tp') {
+                        const config = PAIR_CONFIGS[t.pair];
+                        const entry = parseFloat(t.entry);
+                        const sl = parseFloat(t.sl) || 0;
+                        let tp = parseFloat(t.tp);
+                        const isTpValid = !isNaN(tp);
+                        const lot = parseFloat(t.lot) || 0.01;
+                        
+                        // Deduce balance from original risk
+                        let riskUsdOrig = parseFloat(String(t.risk || "").replace(/[^0-9.-]+/g,"")) || 0;
+                        riskUsdOrig = Math.abs(riskUsdOrig);
+                        let balance = 10000; 
+                        if (t.riskPct && t.riskPct > 0) {
+                            balance = riskUsdOrig / (t.riskPct / 100);
+                        }
+                        
+                        // New SL
+                        const diffSL = Math.abs(entry - sl);
+                        let actualRiskUsd = 0;
+                        if (config.marginFormula === 'usd-quote') {
+                            actualRiskUsd = lot * config.contractSize * diffSL;
+                        } else {
+                            actualRiskUsd = (lot * config.contractSize * diffSL) / entry;
+                        }
+                        t.risk = `-$${formatMoney(actualRiskUsd)}`;
+                        t.riskPct = (actualRiskUsd / balance) * 100;
+                        
+                        // New TP
+                        let actualRewardUsd = 0;
+                        if (isTpValid && tp > 0) {
+                            const diffTP = Math.abs(tp - entry);
+                            if (config.marginFormula === 'usd-quote') {
+                                actualRewardUsd = lot * config.contractSize * diffTP;
+                            } else {
+                                actualRewardUsd = (lot * config.contractSize * diffTP) / entry;
+                            }
+                            t.reward = `+$${formatMoney(actualRewardUsd)}`;
+                            t.rewardPct = (actualRewardUsd / balance) * 100;
+                            
+                            let rrRatio = actualRiskUsd > 0 ? (actualRewardUsd / actualRiskUsd) : 0;
+                            t.rr = `1 : ${rrRatio.toFixed(2)}`;
+                        } else {
+                            t.reward = 'N/A';
+                            t.rewardPct = 0;
+                            t.rr = 'N/A';
+                        }
+                    }
+
+                    await tradeRef.update(t);
                 }
+            } catch (e) {
+                alert("Gagal update data: " + e.message);
             }
         }
 
@@ -2759,20 +2814,42 @@
                 for (let i = journalData.length - 1; i >= 0; i--) {
                     const t = journalData[i];
                     
-                    // Default values for backward compatibility with old saves
                     let rPct = t.rewardPct || 0;
                     let rskPct = t.riskPct || 0;
                     
-                    if(t.status === 'win') {
-                        winCount++;
-                        netPnl += rPct;
-                    }
-                    if(t.status === 'lose') {
-                        loseCount++;
-                        netPnl -= rskPct;
-                    }
-                    if(t.status === 'bep') {
-                        bepCount++;
+                    let pnlToAdd = 0;
+                    if (t.status === 'win' || t.status === 'lose' || t.status === 'bep') {
+                        if (t.status === 'win') winCount++;
+                        else if (t.status === 'lose') loseCount++;
+                        else if (t.status === 'bep') bepCount++;
+
+                        if (t.closePrice && parseFloat(t.closePrice) > 0) {
+                            const cp = parseFloat(t.closePrice);
+                            const entry = parseFloat(t.entry);
+                            const config = PAIR_CONFIGS[t.pair];
+                            const lot = parseFloat(t.lot) || 0.01;
+                            
+                            let pnlUsd = 0;
+                            let diff = cp - entry;
+                            if (t.direction === 'SELL') diff = entry - cp;
+                            
+                            if (config.marginFormula === 'usd-quote') {
+                                pnlUsd = lot * config.contractSize * diff;
+                            } else {
+                                pnlUsd = (lot * config.contractSize * diff) / entry;
+                            }
+                            
+                            let riskUsdOrig = parseFloat(String(t.risk || "").replace(/[^0-9.-]+/g,"")) || 0;
+                            riskUsdOrig = Math.abs(riskUsdOrig);
+                            let balance = (riskUsdOrig > 0 && t.riskPct > 0) ? (riskUsdOrig / (t.riskPct / 100)) : 10000;
+                            
+                            pnlToAdd = (pnlUsd / balance) * 100;
+                        } else {
+                            if (t.status === 'win') pnlToAdd = rPct;
+                            if (t.status === 'lose') pnlToAdd = -rskPct;
+                            if (t.status === 'bep') pnlToAdd = 0;
+                        }
+                        netPnl += pnlToAdd;
                     }
 
                     const tr = document.createElement('tr');
@@ -2796,9 +2873,9 @@
                         <td style="font-weight:600; color:var(--text-main);">${t.pair}</td>
                         <td><span style="color: ${t.direction === 'BUY' ? 'var(--color-success)' : 'var(--color-danger)'}; font-weight: 600;">${t.direction}</span></td>
                         <td>${t.entry}</td>
-                        <td style="color: var(--color-danger);">${t.sl}</td>
-                        <td style="color: var(--color-success);">${t.tp}</td>
-                        <td><input type="number" class="close-price-input" placeholder="Close" value="${t.closePrice || ''}" onchange="updateTradeClosePrice('${t.id}', this.value)" style="width: 70px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); color: #fff; padding: 4px; border-radius: 4px;" /></td>
+                        <td><input type="number" step="any" class="close-price-input" value="${t.sl}" onchange="updateTradeParam('${t.id}', 'sl', this.value)" style="width: 70px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); color: var(--color-danger); padding: 4px; border-radius: 4px;" /></td>
+                        <td><input type="number" step="any" class="close-price-input" value="${t.tp !== 'None' ? t.tp : ''}" placeholder="None" onchange="updateTradeParam('${t.id}', 'tp', this.value)" style="width: 70px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); color: var(--color-success); padding: 4px; border-radius: 4px;" /></td>
+                        <td><input type="number" step="any" class="close-price-input" placeholder="Close" value="${t.closePrice || ''}" onchange="updateTradeParam('${t.id}', 'closePrice', this.value)" style="width: 70px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); color: #fff; padding: 4px; border-radius: 4px;" /></td>
                         <td style="font-weight:bold;">${t.lot}</td>
                         <td style="font-weight:600; color:#fff;">${t.rr || 'N/A'}</td>
                         <td><span style="color:var(--color-danger);">${t.risk}</span> / <span style="color:var(--color-success);">${t.reward}</span></td>
